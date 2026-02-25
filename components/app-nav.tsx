@@ -54,7 +54,10 @@ export function AppNav() {
         aria-label="Main navigation"
       >
         <div className="px-5 py-6">
-          <h1 className="text-lg font-bold text-foreground tracking-tight">Recipebook</h1>
+<h1 className="text-2xl uppercase tracking-wider">
+  <span className="font-black text-orange-500">Recipe</span>
+  <span className="font-light text-orange-300">book</span>
+</h1>
         </div>
         <div className="flex flex-col gap-1 px-3 flex-1">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
