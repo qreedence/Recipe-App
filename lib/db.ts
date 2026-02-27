@@ -7,7 +7,7 @@ const db = new Dexie("recipebook") as Dexie & {
 }
 
 db.version(1).stores({
-  recipes: "id, title, createdAt, rating, *tags",
+  recipes: "id, title, createdAt, rating, *tags, isFavorite",
   shoppingItems: "id, checked, category, recipeId, createdAt",
 })
 

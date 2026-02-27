@@ -16,6 +16,7 @@ export interface Recipe {
   id: string
   title: string
   portions: number
+  isFavorite: boolean
   ingredients: Ingredient[]
   steps: string[]
   image: string | null

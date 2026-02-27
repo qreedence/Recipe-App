@@ -74,6 +74,7 @@ export function CreateRecipeForm() {
       tags,
       rating: null,
       createdAt: Date.now(),
+      isFavorite: false
     }
 
     await saveRecipeAndRevalidate(recipe)
