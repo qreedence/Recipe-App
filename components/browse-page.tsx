@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from "react"
 import Link from "next/link"
-import { Plus, SlidersHorizontal, BookOpen, ArrowUpDown, Check } from "lucide-react"
+import { Plus, SlidersHorizontal, BookOpen, ArrowUpDown, Check, Heart } from "lucide-react"
 import { useRecipes } from "@/hooks/use-recipes"
 import { SearchBar } from "@/components/search-bar"
 import { FilterChips } from "@/components/filter-chips"
@@ -96,9 +96,15 @@ export function BrowsePage() {
   const [filterTags, setFilterTags] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
   const [sort, setSort] = useState<SortOption>("recent")
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
 
   const filtered = useMemo(() => {
     let result = recipes
+
+    if (favoritesOnly) {
+      result = result.filter((r) => r.isFavorite)
+    }
+       
     if (search.trim()) {
       const q = search.toLowerCase()
       result = result.filter(
@@ -141,7 +147,7 @@ export function BrowsePage() {
     })
 
     return result
-  }, [recipes, search, filterTags, sort])
+  }, [recipes, search, filterTags, sort, favoritesOnly])
 
   if (isLoading) return null
 
@@ -155,6 +161,17 @@ export function BrowsePage() {
             <div className="flex-1">
               <SearchBar value={search} onChange={setSearch} />
             </div>
+            <button
+  onClick={() => setFavoritesOnly(!favoritesOnly)}
+  className={`p-2.5 rounded-lg border transition-colors duration-150 ${
+    favoritesOnly
+      ? "bg-primary text-primary-foreground border-primary"
+      : "bg-card text-foreground border-border hover:bg-accent"
+  }`}
+  aria-label="Show favorites only"
+>
+  <Heart className="h-4 w-4" />
+</button>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2.5 rounded-lg border transition-colors duration-150 ${
