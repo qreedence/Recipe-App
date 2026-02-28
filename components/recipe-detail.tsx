@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useRecipe, deleteRecipeAndRevalidate, updateRecipeAndRevalidate } from "@/hooks/use-recipes"
 import { StarRating } from "@/components/star-rating"
+import { FavoriteButton } from "./favorites-button"
 
 interface RecipeDetailProps {
   id: string
@@ -112,6 +113,12 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
     })
   }
 
+  async function handleFavorite() {
+    await updateRecipeAndRevalidate(recipe!.id, {
+      isFavorite: !recipe!.isFavorite,
+    })
+  }
+
   async function handleDelete() {
     await deleteRecipeAndRevalidate(recipe!.id)
     router.push("/")
@@ -161,7 +168,12 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
                 <StarRating value={recipe.rating} onChange={handleRating} />
               </div>
             </div>
-            <AlertDialog>
+           <div className="flex items-center gap-1">
+ <FavoriteButton
+    isFavorite={recipe.isFavorite}
+    onToggle={handleFavorite}
+  />
+ <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button
                   className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
@@ -186,6 +198,7 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+           </div>
           </div>
 
           {/* Macro pills */}
