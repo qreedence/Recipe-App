@@ -48,4 +48,5 @@ export async function exportDatabase() {
   a.download = file.name;
   a.click();
   URL.revokeObjectURL(url);
+  localStorage.setItem("lastExportedAt", new Date().toISOString());
 }
