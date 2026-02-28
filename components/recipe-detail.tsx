@@ -112,6 +112,12 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
     })
   }
 
+  async function handleFavorite() {
+    await updateRecipeAndRevalidate(recipe!.id, {
+      isFavorite: !recipe!.isFavorite,
+    })
+  }
+
   async function handleDelete() {
     await deleteRecipeAndRevalidate(recipe!.id)
     router.push("/")
