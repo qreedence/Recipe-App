@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Settings, Download } from "lucide-react";
+import { Settings, Download, Upload } from "lucide-react";
 import { exportDatabase } from "@/lib/export-db";
+import { importDatabase } from "@/lib/import-db";
 
 export function SettingsMenu({ variant = "icon" }: { variant?: "icon" | "sidebar" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -22,12 +24,48 @@ export function SettingsMenu({ variant = "icon" }: { variant?: "icon" | "sidebar
 
   async function handleExport() {
     console.log("starting export");
-    // setOpen(false);
     await exportDatabase();
   }
 
+  async function handleImport() {
+  setOpen(false);
+  fileInputRef.current?.click();
+}
+
+async function onFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  // Reset so the same file can be re-selected
+  e.target.value = "";
+
+  const confirmed = window.confirm(
+    "This will replace all your current recipes and shopping items. Are you sure?"
+  );
+  if (!confirmed) return;
+
+  const result = await importDatabase(file);
+
+  if (result.success) {
+    window.alert(
+      `Imported ${result.recipesCount} recipes and ${result.shoppingItemsCount} shopping items.`
+    );
+  } else {
+    window.alert(result.error);
+  }
+}
+
   return (
     <div ref={ref} className="relative">
+
+        <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={onFileSelected}
+        />
+
       {variant === "sidebar" ? (
         <button
           onClick={() => setOpen(!open)}
@@ -69,6 +107,13 @@ export function SettingsMenu({ variant = "icon" }: { variant?: "icon" | "sidebar
             <Download className="h-4 w-4" />
             Export Backup
           </button>
+          <button
+  onClick={handleImport}
+  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-100"
+>
+  <Upload className="h-4 w-4" />
+  Import Backup
+</button>
         </div>
       )}
     </div>
