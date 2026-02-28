@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Flame, Drumstick } from "lucide-react"
 import { Recipe } from "@/lib/types"
 import { StarRating } from "@/components/star-rating"
+import { FavoriteButton } from "./favorites-button"
 
 interface RecipeCardProps {
   recipe: Recipe
@@ -32,9 +33,14 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
           )}
         </div>
         <div className="p-3">
-          <h3 className="font-semibold text-sm text-card-foreground leading-tight line-clamp-2 text-balance">
-            {recipe.title}
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm text-card-foreground leading-tight line-clamp-2 text-balance">
+              {recipe.title}
+            </h3>
+              {recipe.isFavorite && (
+                <FavoriteButton isFavorite size="sm" readOnly />
+              )}
+          </div>
           {recipe.rating !== null && recipe.rating > 0 && (
             <div className="mt-1">
               <StarRating value={recipe.rating} size="sm" readOnly />
