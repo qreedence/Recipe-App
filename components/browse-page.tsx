@@ -159,10 +159,10 @@ export function BrowsePage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3 lg:hidden">
-  <h1 className="text-2xl uppercase tracking-wider">
-    <span className="font-black text-orange-500">Recipe</span>
-    <span className="font-light text-orange-300">book</span>
-  </h1>
+            <h1 className="text-2xl uppercase tracking-wider">
+              <span className="font-black text-orange-500">Recipe</span>
+              <span className="font-light text-orange-300">book</span>
+            </h1>
   <div className="flex items-center gap-2">
     <InstallButton />
     <SettingsMenu />

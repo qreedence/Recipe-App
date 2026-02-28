@@ -1,6 +1,6 @@
 {
   "name": "RecipeBook",
-  "short_name": "RB",
+  "short_name": "RecipeBook",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
