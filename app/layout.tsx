@@ -4,6 +4,7 @@ import { Toaster } from 'sonner'
 import { Analytics } from '@vercel/analytics/next'
 import { AppNav } from '@/components/app-nav'
 import './globals.css'
+import { ExportReminder } from '@/components/export-reminder'
 
 const _inter = Inter({ subsets: ["latin"] })
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
@@ -49,6 +50,7 @@ export default function RootLayout({
           {children}
         </div>
         <Toaster position="top-center" richColors duration={2000} />
+        <ExportReminder />
         <Analytics />
       </body>
     </html>

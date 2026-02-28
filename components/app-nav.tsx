@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { BookOpen, PlusCircle, ShoppingCart } from "lucide-react"
+import { SettingsMenu } from "./settings-menu"
 
 const NAV_ITEMS = [
   { href: "/", label: "Recipes", icon: BookOpen },
@@ -54,10 +55,10 @@ export function AppNav() {
         aria-label="Main navigation"
       >
         <div className="px-5 py-6">
-<h1 className="text-2xl uppercase tracking-wider">
-  <span className="font-black text-orange-500">Recipe</span>
-  <span className="font-light text-orange-300">book</span>
-</h1>
+          <h1 className="text-2xl uppercase tracking-wider">
+            <span className="font-black text-orange-500">Recipe</span>
+            <span className="font-light text-orange-300">book</span>
+          </h1>
         </div>
         <div className="flex flex-col gap-1 px-3 flex-1">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -77,6 +78,9 @@ export function AppNav() {
               </Link>
             )
           })}
+        </div>
+        <div className="px-3 py-4 border-t border-border">
+          <SettingsMenu variant="sidebar" />
         </div>
       </aside>
     </>
