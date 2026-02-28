@@ -8,3 +8,7 @@ node_modules/
 .next/
 .env*.local
 .DS_Store
+
+# Serwist
+public/sw*
+public/swe-worker*

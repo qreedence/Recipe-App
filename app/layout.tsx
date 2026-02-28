@@ -12,6 +12,7 @@ const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: 'Recipebook',
   description: 'Your personal recipe collection with macro tracking',
+  manifest: "/manifest.json",
   icons: {
     icon: [
       {
