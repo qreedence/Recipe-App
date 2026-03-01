@@ -10,6 +10,7 @@ import {
   Beef,
   Wheat,
   Droplets,
+  Pencil,
 } from "lucide-react"
 import {
   AlertDialog,
@@ -169,6 +170,13 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
               </div>
             </div>
            <div className="flex items-center gap-1">
+            <Link
+  href={`/recipe/${recipe.id}/edit`}
+  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+  aria-label="Edit recipe"
+>
+  <Pencil className="h-5 w-5" />
+</Link>
  <FavoriteButton
     isFavorite={recipe.isFavorite}
     onToggle={handleFavorite}
