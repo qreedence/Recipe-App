@@ -16,29 +16,48 @@ import { StepTags } from "./step-tags"
 
 const STEP_LABELS = ["Ingredients", "Instructions", "Image", "Macros", "Tags"]
 
-export function CreateRecipeForm() {
+interface RecipeFormProps {
+  mode: "create" | "edit"
+  initialData?: Recipe
+}
+
+export function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const router = useRouter()
   const [step, setStep] = useState(0)
 
+  const isEdit = mode === "edit"
+
   // Step 1
-  const [title, setTitle] = useState("")
-  const [portions, setPortions] = useState(1)
-  const [ingredients, setIngredients] = useState<Ingredient[]>([
-    { id: crypto.randomUUID(), name: "", amount: "", macros: null },
-  ])
+  const [title, setTitle] = useState(initialData?.title ?? "")
+  const [portions, setPortions] = useState(initialData?.portions ?? 1)
+  const [ingredients, setIngredients] = useState<Ingredient[]>(
+    initialData?.ingredients.length
+      ? initialData.ingredients
+      : [{ id: crypto.randomUUID(), name: "", amount: "", macros: null }]
+  )
 
   // Step 2
-  const [steps, setSteps] = useState<string[]>([""])
+  const [steps, setSteps] = useState<string[]>(
+    initialData?.steps.length ? initialData.steps : [""]
+  )
 
   // Step 3
-  const [image, setImage] = useState<string | null>(null)
+  const [image, setImage] = useState<string | null>(
+    initialData?.image ?? null
+  )
 
   // Step 4
-  const [macroMode, setMacroMode] = useState<"auto" | "manual">("auto")
-  const [manualMacros, setManualMacros] = useState<Macros>({ ...EMPTY_MACROS })
+  const [macroMode, setMacroMode] = useState<"auto" | "manual">(
+    initialData?.macroMode ?? "auto"
+  )
+  const [manualMacros, setManualMacros] = useState<Macros>(
+    initialData?.macroMode === "manual"
+      ? { ...initialData.macros }
+      : { ...EMPTY_MACROS }
+  )
 
   // Step 5
-  const [tags, setTags] = useState<string[]>([])
+  const [tags, setTags] = useState<string[]>(initialData?.tags ?? [])
 
   function calcAutoMacros(): Macros {
     return ingredients.reduce(
@@ -63,7 +82,7 @@ export function CreateRecipeForm() {
     }
 
     const recipe: Recipe = {
-      id: crypto.randomUUID(),
+      id: initialData?.id ?? crypto.randomUUID(),
       title: title.trim(),
       portions: Math.max(1, portions),
       ingredients: ingredients.filter((i) => i.name.trim()),
@@ -72,14 +91,14 @@ export function CreateRecipeForm() {
       macros: macroMode === "auto" ? calcAutoMacros() : manualMacros,
       macroMode,
       tags,
-      rating: null,
-      createdAt: Date.now(),
-      isFavorite: false
+      rating: initialData?.rating ?? null,
+      createdAt: initialData?.createdAt ?? Date.now(),
+      isFavorite: initialData?.isFavorite ?? false,
     }
 
     await saveRecipeAndRevalidate(recipe)
-    toast.success("Recipe saved!")
-    router.push("/")
+    toast.success(isEdit ? "Recipe updated!" : "Recipe saved!")
+    router.push(isEdit ? `/recipe/${recipe.id}` : "/")
   }
 
   const totalSteps = STEP_LABELS.length
@@ -87,21 +106,21 @@ export function CreateRecipeForm() {
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
-      {/* Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <Link
-              href="/"
+              href={isEdit ? `/recipe/${initialData!.id}` : "/"}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Cancel
             </Link>
-            <h1 className="text-sm font-semibold text-foreground">New Recipe</h1>
+            <h1 className="text-sm font-semibold text-foreground">
+              {isEdit ? "Edit Recipe" : "New Recipe"}
+            </h1>
             <div className="w-12" />
           </div>
 
-          {/* Progress bar */}
           <div className="flex gap-1.5">
             {STEP_LABELS.map((label, i) => (
               <button
@@ -130,7 +149,6 @@ export function CreateRecipeForm() {
         </div>
       </header>
 
-      {/* Step content */}
       <main className="max-w-2xl mx-auto px-4 py-6 pb-28">
         {step === 0 && (
           <StepIngredients
@@ -157,7 +175,6 @@ export function CreateRecipeForm() {
         {step === 4 && <StepTags tags={tags} setTags={setTags} />}
       </main>
 
-      {/* Bottom nav — sits above the mobile bottom bar */}
       <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-30">
         <div className="max-w-2xl mx-auto px-4 py-3 flex gap-3 lg:pl-60">
           {step > 0 && (
@@ -173,7 +190,7 @@ export function CreateRecipeForm() {
           {isLast ? (
             <Button onClick={handleSave} className="flex-1">
               <Check className="h-4 w-4 mr-1.5" />
-              Save Recipe
+              {isEdit ? "Update Recipe" : "Save Recipe"}
             </Button>
           ) : (
             <Button onClick={() => setStep(step + 1)} className="flex-1">
