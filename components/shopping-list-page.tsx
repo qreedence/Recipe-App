@@ -168,6 +168,8 @@ export function ShoppingListPage() {
   const { items, isLoading } = useShoppingItems()
   const [newItemName, setNewItemName] = useState("")
   const [newItemAmount, setNewItemAmount] = useState("")
+  const [newItemCategory, setNewItemCategory] = useState<string | null>(null)
+  const [showNewItemCategoryPicker, setShowNewItemCategoryPicker] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const checkedCount = items.filter((i) => i.checked).length
@@ -205,16 +207,17 @@ export function ShoppingListPage() {
       name: newItemName.trim(),
       amount: newItemAmount.trim(),
       checked: false,
-      category: null,
+      category: newItemCategory,
       recipeId: null,
       recipeTitle: null,
       createdAt: Date.now(),
     }
 
     await addItemsAndRevalidate([item])
-    setNewItemName("")
-    setNewItemAmount("")
-    inputRef.current?.focus()
+    setNewItemName("");
+    setNewItemAmount("");
+    setNewItemCategory(null);
+    inputRef.current?.focus();
   }
 
   if (isLoading) return null
@@ -289,6 +292,42 @@ export function ShoppingListPage() {
               onChange={(e) => setNewItemAmount(e.target.value)}
               className="w-20 h-10 rounded-lg border border-border bg-card px-3 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
+            {/* Category selector for new item */}
+  <button
+    type="button"
+    onClick={() =>
+      setShowNewItemCategoryPicker(!showNewItemCategoryPicker)
+    }
+    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors duration-150 ${
+      newItemCategory
+        ? "bg-primary/10 text-primary"
+        : "text-muted-foreground hover:bg-accent"
+    }`}
+  >
+    <Tag className="h-3.5 w-3.5" />
+    {newItemCategory ?? "Category"}
+    {newItemCategory && (
+      <span
+        role="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          setNewItemCategory(null)
+          setShowNewItemCategoryPicker(false)
+        }}
+        className="ml-0.5 hover:text-destructive"
+      >
+        <X className="h-3 w-3" />
+      </span>
+    )}
+  </button>
+  {showNewItemCategoryPicker && (
+    <CategoryPicker
+      value={newItemCategory}
+      onChange={(cat) => setNewItemCategory(cat)}
+      onClose={() => setShowNewItemCategoryPicker(false)}
+    />
+  )}
+
             <button
               type="submit"
               disabled={!newItemName.trim()}
