@@ -51,7 +51,7 @@ export const PRESET_TAGS = [
 export const EMPTY_MACROS: Macros = { kcal: 0, carbs: 0, fat: 0, protein: 0 }
 
 export const GROCERY_CATEGORIES = [
-  "Produce",
+  "Fruits & Vegetables",
   "Meat & Seafood",
   "Dairy & Eggs",
   "Bakery",
@@ -62,6 +62,8 @@ export const GROCERY_CATEGORIES = [
   "Condiments & Sauces",
   "Spices & Seasonings",
   "Beverages",
+  "Household/Cleaning",
+  "Hygiene",
   "Other",
 ] as const
 
