@@ -276,67 +276,74 @@ export function ShoppingListPage() {
           </div>
 
           {/* Add item form */}
-          <form onSubmit={handleAddItem} className="flex gap-2">
+          <form onSubmit={handleAddItem} className="flex gap-1.5 pr-1">
             <input
               ref={inputRef}
               type="text"
               placeholder="Add an item..."
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
-              className="flex-1 h-10 rounded-lg border border-border bg-card px-3 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="flex-1 min-w-0 h-10 rounded-lg border border-border bg-card px-3 text-base sm:text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="text"
               placeholder="Qty"
               value={newItemAmount}
               onChange={(e) => setNewItemAmount(e.target.value)}
-              className="w-20 h-10 rounded-lg border border-border bg-card px-3 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-16 h-10 rounded-lg border border-border bg-card px-3 text-base sm:text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             {/* Category selector for new item */}
-  <button
-    type="button"
-    onClick={() =>
-      setShowNewItemCategoryPicker(!showNewItemCategoryPicker)
-    }
-    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors duration-150 ${
-      newItemCategory
-        ? "bg-primary/10 text-primary"
-        : "text-muted-foreground hover:bg-accent"
-    }`}
-  >
-    <Tag className="h-3.5 w-3.5" />
-    {newItemCategory ?? "Category"}
-    {newItemCategory && (
-      <span
-        role="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          setNewItemCategory(null)
-          setShowNewItemCategoryPicker(false)
-        }}
-        className="ml-0.5 hover:text-destructive"
-      >
-        <X className="h-3 w-3" />
-      </span>
-    )}
-  </button>
-  {showNewItemCategoryPicker && (
-    <CategoryPicker
-      value={newItemCategory}
-      onChange={(cat) => setNewItemCategory(cat)}
-      onClose={() => setShowNewItemCategoryPicker(false)}
-    />
-  )}
-
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() =>
+                  setShowNewItemCategoryPicker(!showNewItemCategoryPicker)
+                }
+                className={`h-10 w-10 rounded-lg flex items-center justify-center transition-colors ${
+                  newItemCategory
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-accent"
+                }`}
+                aria-label="Set category"
+              >
+                <Tag className="h-5 w-5" />
+              </button>
+              {showNewItemCategoryPicker && (
+                <CategoryPicker
+                  value={newItemCategory}
+                  onChange={(cat) => setNewItemCategory(cat)}
+                  onClose={() => setShowNewItemCategoryPicker(false)}
+                />
+              )}
+            </div>
             <button
               type="submit"
               disabled={!newItemName.trim()}
-              className="h-10 w-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-40 shrink-0"
+              className="h-10 w-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-40 shrink-0"  
               aria-label="Add item"
             >
               <Plus className="h-5 w-5" />
             </button>
           </form>
+          {newItemCategory && (
+  <div className="flex items-center gap-1.5 mt-2">
+    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-primary/10 text-primary">
+      <Tag className="h-3 w-3" />
+      {newItemCategory}
+      <button
+        type="button"
+        onClick={() => {
+          setNewItemCategory(null)
+          setShowNewItemCategoryPicker(false)
+        }}
+        className="ml-0.5 hover:text-destructive"
+        aria-label="Clear category"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </span>
+  </div>
+)}
         </div>
       </header>
 
