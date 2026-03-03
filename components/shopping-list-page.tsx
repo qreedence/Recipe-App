@@ -283,14 +283,14 @@ export function ShoppingListPage() {
               placeholder="Add an item..."
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
-              className="flex-1 min-w-0 h-10 rounded-lg border border-border bg-card px-3 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="flex-1 min-w-0 h-10 rounded-lg border border-border bg-card px-3 text-base sm:text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="text"
               placeholder="Qty"
               value={newItemAmount}
               onChange={(e) => setNewItemAmount(e.target.value)}
-              className="w-16 h-10 rounded-lg border border-border bg-card px-3 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-16 h-10 rounded-lg border border-border bg-card px-3 text-base sm:text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             {/* Category selector for new item */}
             <div className="relative shrink-0">
