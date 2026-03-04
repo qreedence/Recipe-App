@@ -10,7 +10,7 @@ import { RecipeCard } from "@/components/recipe-card"
 import { SettingsMenu } from "./settings-menu"
 import { InstallButton } from "@/components/install-button"
 
-type SortOption = "recent" | "rating" | "kcal-asc" | "kcal-desc" | "protein-desc"
+type SortOption = "recent" | "rating" | "kcal-asc" | "kcal-desc" | "protein-desc" | "alpha"
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "recent", label: "Recently Added" },
@@ -18,6 +18,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "kcal-asc", label: "Lowest Calories" },
   { value: "kcal-desc", label: "Highest Calories" },
   { value: "protein-desc", label: "Most Protein" },
+  { value: "alpha", label: "Alphabetical"}
 ]
 
 function SortDropdown({
@@ -141,7 +142,9 @@ export function BrowsePage() {
           const aProt = a.portions > 0 ? a.macros.protein / a.portions : 0
           const bProt = b.portions > 0 ? b.macros.protein / b.portions : 0
           return bProt - aProt
-        }
+        },
+        case "alpha":
+          return a.title.localeCompare(b.title)
         case "recent":
         default:
           return b.createdAt - a.createdAt
