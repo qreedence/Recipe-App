@@ -142,7 +142,7 @@ export function BrowsePage() {
           const aProt = a.portions > 0 ? a.macros.protein / a.portions : 0
           const bProt = b.portions > 0 ? b.macros.protein / b.portions : 0
           return bProt - aProt
-        },
+        }
         case "alpha":
           return a.title.localeCompare(b.title)
         case "recent":
