@@ -117,17 +117,19 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
       {/* Item details */}
       <div className="flex-1 min-w-0">
         <p
-          className={`text-sm leading-tight ${
+          className={`text-sm leading-tight truncate ${
             item.checked
               ? "line-through text-muted-foreground"
               : "text-card-foreground"
           }`}
         >
           {item.name}
+          {item.amount && (
+            <span className="text-muted-foreground ml-1.5">
+              · {item.amount}
+            </span>
+          )}
         </p>
-        {item.amount && (
-          <p className="text-xs text-muted-foreground mt-0.5">{item.amount}</p>
-        )}
       </div>
 
       {/* Category button */}
