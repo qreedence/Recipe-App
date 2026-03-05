@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { lookupCategory } from "@/lib/category-lookup"
 
 function CategoryPicker({
   value,
@@ -117,17 +118,19 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
       {/* Item details */}
       <div className="flex-1 min-w-0">
         <p
-          className={`text-sm leading-tight ${
+          className={`text-sm leading-tight truncate ${
             item.checked
               ? "line-through text-muted-foreground"
               : "text-card-foreground"
           }`}
         >
           {item.name}
+          {item.amount && (
+            <span className="text-muted-foreground ml-1.5">
+              · {item.amount}
+            </span>
+          )}
         </p>
-        {item.amount && (
-          <p className="text-xs text-muted-foreground mt-0.5">{item.amount}</p>
-        )}
       </div>
 
       {/* Category button */}
@@ -220,6 +223,13 @@ export function ShoppingListPage() {
     inputRef.current?.focus();
   }
 
+  function handleNameBlur() {
+  if (!newItemCategory && newItemName.trim()) {
+    const detected = lookupCategory(newItemName.trim())
+    if (detected) setNewItemCategory(detected)
+  }
+}
+
   if (isLoading) return null
 
   return (
@@ -283,6 +293,7 @@ export function ShoppingListPage() {
               placeholder="Add an item..."
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
+              onBlur={handleNameBlur}
               className="flex-1 min-w-0 h-10 rounded-lg border border-border bg-card px-3 text-base sm:text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input

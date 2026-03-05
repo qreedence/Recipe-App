@@ -67,6 +67,8 @@ export const GROCERY_CATEGORIES = [
   "Other",
 ] as const
 
+export type GroceryCategory = (typeof GROCERY_CATEGORIES)[number]
+
 export interface ShoppingItem {
   id: string
   name: string
