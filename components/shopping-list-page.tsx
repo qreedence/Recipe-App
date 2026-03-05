@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { lookupCategory } from "@/lib/category-lookup"
 
 function CategoryPicker({
   value,
@@ -222,6 +223,13 @@ export function ShoppingListPage() {
     inputRef.current?.focus();
   }
 
+  function handleNameBlur() {
+  if (!newItemCategory && newItemName.trim()) {
+    const detected = lookupCategory(newItemName.trim())
+    if (detected) setNewItemCategory(detected)
+  }
+}
+
   if (isLoading) return null
 
   return (
@@ -285,6 +293,7 @@ export function ShoppingListPage() {
               placeholder="Add an item..."
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
+              onBlur={handleNameBlur}
               className="flex-1 min-w-0 h-10 rounded-lg border border-border bg-card px-3 text-base sm:text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <input
