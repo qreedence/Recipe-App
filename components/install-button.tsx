@@ -12,6 +12,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import { clearDeferredPrompt, getDeferredPrompt } from "@/lib/pwa-install"
 
 function isIOSSafari() {
   if (typeof navigator === "undefined") return false
@@ -39,6 +40,12 @@ export function InstallButton() {
       return
     }
 
+    const existing = getDeferredPrompt();
+    if (existing) {
+      setDeferredPrompt(existing);
+      return;
+    }
+
     const handler = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e)
@@ -55,7 +62,8 @@ export function InstallButton() {
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     if (outcome === "accepted") {
-      setDeferredPrompt(null)
+      setDeferredPrompt(null);
+      clearDeferredPrompt();
     }
   }
 
