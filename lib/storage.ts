@@ -40,8 +40,9 @@ export async function deleteShoppingItem(id: string): Promise<void> {
 }
 
 export async function clearCheckedItems(): Promise<void> {
-  const checked = await db.shoppingItems.where("checked").equals(1).toArray()
-  await db.shoppingItems.bulkDelete(checked.map((i) => i.id))
+  const all = await db.shoppingItems.toArray();
+  const checked = all.filter((i) => i.checked);
+  await db.shoppingItems.bulkDelete(checked.map((i) => i.id));
 }
 
 export async function clearAllShoppingItems(): Promise<void> {
