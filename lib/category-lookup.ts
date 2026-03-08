@@ -286,6 +286,7 @@ const KEYWORD_MAP: [string, GroceryCategory][] = [
   ["fryspizza", "Frozen"],
   ["ice cream", "Frozen"],
   ["glass", "Frozen"],
+  ["edamame", "Frozen"],
   ["sorbet", "Frozen"],
   ["popsicles", "Frozen"],
   ["ispinnar", "Frozen"],
@@ -331,6 +332,7 @@ const KEYWORD_MAP: [string, GroceryCategory][] = [
   ["konserv", "Canned & Jarred"],
   ["beans", "Canned & Jarred"],
   ["bönor", "Canned & Jarred"],
+  ["tahini", "Canned & Jarred"],
 
   // Grains & Pasta
   ["spaghetti", "Grains & Pasta"],
