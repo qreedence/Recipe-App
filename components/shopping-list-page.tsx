@@ -251,6 +251,9 @@ function handleKeyDown(e: React.KeyboardEvent) {
       )}
 
       {/* Actions */}
+      {isEditing ? (
+        <></>
+      ) : (
         <div className="flex items-center gap-1 shrink-0">
           {/* Category button */}
           <div className="relative">
@@ -292,7 +295,7 @@ function handleKeyDown(e: React.KeyboardEvent) {
           <X className="h-4 w-4" />
         </button>
         </div>
-      
+      )}
     </div>
   )
 }
