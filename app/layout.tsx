@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { AppNav } from '@/components/app-nav'
 import './globals.css'
 import { ExportReminder } from '@/components/export-reminder'
+import { LayoutShell } from '@/components/layout-shell'
 
 const _inter = Inter({ subsets: ["latin"] })
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
@@ -47,10 +48,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <AppNav />
-        <div className="lg:pl-56">
-          {children}
-        </div>
+          <AppNav />
+           <LayoutShell>{children}</LayoutShell>
         <Toaster position="top-center" richColors duration={2000} />
         <ExportReminder />
         <Analytics />

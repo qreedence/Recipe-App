@@ -11,17 +11,53 @@ interface StepImageProps {
 export function StepImage({ image, setImage }: StepImageProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const handleFile = useCallback(
-    (file: File) => {
-      if (!file.type.startsWith("image/")) return
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImage(e.target?.result as string)
+const handleFile = useCallback(
+  (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const raw = e.target?.result as string;
+      try {
+        const compressed = await compressImage(raw);
+        setImage(compressed);
+      } catch {
+        setImage(raw);
       }
-      reader.readAsDataURL(file)
-    },
-    [setImage]
-  )
+    };
+    reader.readAsDataURL(file);
+  },
+  [setImage],
+);
+
+  function compressImage(dataUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX_WIDTH = 1920;
+      let { width, height } = img;
+
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Could not get canvas context"));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/webp", 0.75));
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = dataUrl;
+  });
+}
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
