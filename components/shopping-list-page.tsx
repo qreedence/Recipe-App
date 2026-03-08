@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Trash2, ShoppingCart, Check, Tag, X } from "lucide-react"
+import { Plus, Trash2, ShoppingCart, Check, Tag, X, Pencil } from "lucide-react"
 import { ShoppingItem, GROCERY_CATEGORIES } from "@/lib/types"
 import {
   useShoppingItems,
@@ -83,6 +83,80 @@ function CategoryPicker({
 
 function ShoppingItemRow({ item }: { item: ShoppingItem }) {
   const [showCategoryPicker, setShowCategoryPicker] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState(item.name)
+  const [editAmount, setEditAmount] = useState(item.amount ?? "")
+  const nameInputRef = useRef<HTMLInputElement>(null)
+  const editContainerRef = useRef<HTMLDivElement>(null)
+
+  const isDirty =
+    editName.trim() !== item.name ||
+    editAmount.trim() !== (item.amount ?? "")
+
+  useEffect(() => {
+    if (isEditing) {
+      nameInputRef.current?.focus()
+    }
+  }, [isEditing])
+
+  function startEditing() {
+    setEditName(item.name)
+    setEditAmount(item.amount ?? "")
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    setIsEditing(false)
+  }
+
+  function handleEditBlur() {
+    requestAnimationFrame(() => {
+      if (
+        editContainerRef.current &&
+        !editContainerRef.current.contains(document.activeElement)
+      ) {
+        if (isDirty) {
+          const discard = window.confirm(
+            "You have unsaved changes. Discard?"
+          )
+          if (discard) {
+            cancelEditing()
+          } else {
+            nameInputRef.current?.focus()
+          }
+        } else {
+          cancelEditing()
+        }
+      }
+    })
+  }
+
+  async function saveEdit() {
+    const trimmedName = editName.trim()
+    if (!trimmedName) return
+
+    await updateItemAndRevalidate(item.id, {
+      name: trimmedName,
+      amount: editAmount.trim(),
+    })
+    setIsEditing(false)
+  }
+
+function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      saveEdit()
+    } else if (e.key === "Escape") {
+      if (isDirty) {
+        const discard = window.confirm(
+          "You have unsaved changes. Discard?"
+        )
+        if (discard) cancelEditing()
+      } else {
+        cancelEditing()
+      }
+    }
+  }
 
   async function toggleCheck() {
     await updateItemAndRevalidate(item.id, { checked: !item.checked })
@@ -105,6 +179,7 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
       {/* Checkbox */}
       <button
         onClick={toggleCheck}
+        disabled={isEditing}
         className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors duration-150 ${
           item.checked
             ? "bg-primary border-primary"
@@ -112,57 +187,112 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
         }`}
         aria-label={item.checked ? "Uncheck item" : "Check item"}
       >
-        {item.checked && <Check className="h-3 w-3 text-primary-foreground" />}
+        {item.checked && (
+          <Check className="h-3 w-3 text-primary-foreground" />
+        )}
       </button>
 
       {/* Item details */}
-      <div className="flex-1 min-w-0">
-        <p
-          className={`text-sm leading-tight truncate ${
-            item.checked
-              ? "line-through text-muted-foreground"
-              : "text-card-foreground"
-          }`}
-        >
-          {item.name}
-          {item.amount && (
-            <span className="text-muted-foreground ml-1.5">
-              · {item.amount}
-            </span>
-          )}
-        </p>
-      </div>
+      {isEditing ? (
+        <div
+    ref={editContainerRef}
+    onBlur={handleEditBlur}
+    className="flex-1 min-w-0 flex gap-1.5"
+  >
+    <input
+      ref={nameInputRef}
+      type="text"
+      value={editName}
+      onChange={(e) => setEditName(e.target.value)}
+      onKeyDown={handleKeyDown}
+      className="flex-1 min-w-0 h-8 rounded-md border border-border bg-background px-2 text-sm text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+    />
+    <input
+      type="text"
+      placeholder="Qty"
+      value={editAmount}
+      onChange={(e) => setEditAmount(e.target.value)}
+      onKeyDown={handleKeyDown}
+      className="w-16 h-8 rounded-md border border-border bg-background px-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+    />
+    <button
+      onClick={saveEdit}
+      disabled={!editName.trim()}
+      className="p-1.5 rounded-md text-primary hover:bg-primary/10 transition-colors duration-150 disabled:opacity-40"
+      aria-label="Save edit"
+    >
+      <Check className="h-4 w-4" />
+    </button>
+    <button
+      onClick={cancelEditing}
+      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150"
+      aria-label="Cancel edit"
+    >
+      <X className="h-4 w-4" />
+    </button>
+  </div>
+      ) : (
+        <div className="flex-1 min-w-0">
+          <p
+            className={`text-sm leading-tight truncate ${
+              item.checked
+                ? "line-through text-muted-foreground"
+                : "text-card-foreground"
+            }`}
+          >
+            {item.name}
+            {item.amount && (
+              <span className="text-muted-foreground ml-1.5">
+                · {item.amount}
+              </span>
+            )}
+          </p>
+        </div>
+      )}
 
-      {/* Category button */}
-      <div className="relative shrink-0">
+      {/* Actions */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Category button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCategoryPicker(!showCategoryPicker)}
+              className={`p-1.5 rounded-md transition-colors duration-150 ${
+                item.category
+                  ? "text-primary hover:bg-primary/10"
+                  : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent"
+              }`}
+              aria-label="Set category"
+            >
+              <Tag className="h-4 w-4" />
+            </button>
+            {showCategoryPicker && (
+              <CategoryPicker
+                value={item.category}
+                onChange={setCategory}
+                onClose={() => setShowCategoryPicker(false)}
+              />
+            )}
+          </div>
+
+         {/* Edit */}
         <button
-          onClick={() => setShowCategoryPicker(!showCategoryPicker)}
-          className={`p-1.5 rounded-md transition-colors duration-150 ${
-            item.category
-              ? "text-primary hover:bg-primary/10"
-              : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent"
-          }`}
-          aria-label="Set category"
+          onClick={startEditing}
+          className="p-1.5 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors duration-150"
+          aria-label="Edit item"
         >
-          <Tag className="h-4 w-4" />
+          <Pencil className="h-4 w-4" />  
         </button>
-        {showCategoryPicker && (
-          <CategoryPicker
-            value={item.category}
-            onChange={setCategory}
-            onClose={() => setShowCategoryPicker(false)}
-          />
-        )}
-      </div>
 
-      {/* Delete */}
-      <button
-        onClick={handleDelete}
-        className="p-1.5 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors duration-150 shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
-        aria-label="Delete item"
-      >
-        <X className="h-4 w-4" />
-      </button>
+        {/* Delete */}
+        <button
+          onClick={handleDelete}
+          className="p-1.5 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors duration-150"
+          aria-label="Delete item"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        </div>
+      
     </div>
   )
 }
