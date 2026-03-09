@@ -89,10 +89,6 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
   const nameInputRef = useRef<HTMLInputElement>(null)
   const editContainerRef = useRef<HTMLDivElement>(null)
 
-  const isDirty =
-    editName.trim() !== item.name ||
-    editAmount.trim() !== (item.amount ?? "")
-
   useEffect(() => {
     if (isEditing) {
       nameInputRef.current?.focus()
@@ -109,28 +105,21 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
     setIsEditing(false)
   }
 
-  function handleEditBlur() {
-    requestAnimationFrame(() => {
-      if (
-        editContainerRef.current &&
-        !editContainerRef.current.contains(document.activeElement)
-      ) {
-        if (isDirty) {
-          const discard = window.confirm(
-            "You have unsaved changes. Discard?"
-          )
-          if (discard) {
-            cancelEditing()
-          } else {
-            nameInputRef.current?.focus()
-          }
-        } else {
-          cancelEditing()
-        }
+function handleEditBlur() {
+  requestAnimationFrame(() => {
+    if (
+      editContainerRef.current &&
+      !editContainerRef.current.contains(document.activeElement)
+    ) {
+      const trimmedName = editName.trim()
+      if (trimmedName) {
+        saveEdit()
+      } else {
+        cancelEditing()
       }
-    })
-  }
-
+    }
+  })
+}
   async function saveEdit() {
     const trimmedName = editName.trim()
     if (!trimmedName) return
@@ -143,20 +132,13 @@ function ShoppingItemRow({ item }: { item: ShoppingItem }) {
   }
 
 function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      saveEdit()
-    } else if (e.key === "Escape") {
-      if (isDirty) {
-        const discard = window.confirm(
-          "You have unsaved changes. Discard?"
-        )
-        if (discard) cancelEditing()
-      } else {
-        cancelEditing()
-      }
-    }
+  if (e.key === "Enter") {
+    e.preventDefault()
+    saveEdit()
+  } else if (e.key === "Escape") {
+    cancelEditing()
   }
+}
 
   async function toggleCheck() {
     await updateItemAndRevalidate(item.id, { checked: !item.checked })
