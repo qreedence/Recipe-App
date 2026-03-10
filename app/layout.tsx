@@ -6,6 +6,7 @@ import { AppNav } from '@/components/app-nav'
 import './globals.css'
 import { ExportReminder } from '@/components/export-reminder'
 import { LayoutShell } from '@/components/layout-shell'
+import { ImageMigration } from '@/components/image-migration'
 
 const _inter = Inter({ subsets: ["latin"] })
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
@@ -51,6 +52,7 @@ export default function RootLayout({
           <AppNav />
            <LayoutShell>{children}</LayoutShell>
         <Toaster position="top-center" richColors duration={2000} />
+        <ImageMigration/>
         <ExportReminder />
         <Analytics />
       </body>
