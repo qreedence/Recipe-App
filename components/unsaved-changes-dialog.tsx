@@ -25,17 +25,19 @@ export function UnsavedChangesDialog({
   return (
     <AlertDialog open={open} onOpenChange={(v) => !v && onCancel()}>
       <AlertDialogContent>
-        <AlertDialogHeader>
+        <AlertDialogHeader className="text-center sm:text-center">
           <AlertDialogTitle>You have unsaved changes</AlertDialogTitle>
           <AlertDialogDescription>
             If you leave now, your progress will be lost. Are you sure?
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel}>
+<AlertDialogFooter className="flex-row justify-center items-center sm:justify-center">
+          <AlertDialogCancel onClick={onCancel} >
             Keep editing
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>
+          <AlertDialogAction 
+            onClick={onConfirm} 
+            className="p-1.5 rounded-md text-muted-foreground/40 text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors duration-150">
             Discard changes
           </AlertDialogAction>
         </AlertDialogFooter>
