@@ -49,8 +49,8 @@ export function MacroModal({
 
   const fields: { key: keyof Macros; label: string; unit: string }[] = [
     { key: "kcal", label: "Calories", unit: "kcal" },
-    { key: "protein", label: "Protein", unit: "g" },
     { key: "carbs", label: "Carbs", unit: "g" },
+    { key: "protein", label: "Protein", unit: "g" },
     { key: "fat", label: "Fat", unit: "g" },
   ]
 
@@ -75,6 +75,14 @@ export function MacroModal({
                   step="any"
                   value={macros[key] || ""}
                   onChange={(e) => handleChange(key, e.target.value)}
+                  onFocus={(e) => {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                    }, 300);
+                  }}
                   placeholder="0"
                   className="pr-12"
                 />
