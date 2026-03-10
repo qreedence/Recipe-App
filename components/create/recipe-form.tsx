@@ -13,6 +13,8 @@ import { StepInstructions } from "./step-instructions"
 import { StepImage } from "./step-image"
 import { StepMacros } from "./step-macros"
 import { StepTags } from "./step-tags"
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes"
+import { UnsavedChangesDialog } from "../unsaved-changes-dialog"
 
 const STEP_LABELS = ["Ingredients", "Instructions", "Image", "Macros", "Tags"]
 
@@ -74,6 +76,21 @@ export function RecipeForm({ mode, initialData }: RecipeFormProps) {
     )
   }
 
+  const isDirty =
+  title !== (initialData?.title ?? "") ||
+  portions !== (initialData?.portions ?? 1) ||
+  image !== (initialData?.image ?? null) ||
+  tags.length !== (initialData?.tags ?? []).length ||
+  steps.some((s, i) => s !== (initialData?.steps?.[i] ?? "")) ||
+  steps.length !== (initialData?.steps?.length ?? 1) ||
+  ingredients.some(
+    (ing, i) => ing.name !== (initialData?.ingredients?.[i]?.name ?? "")
+  ) ||
+  ingredients.length !== (initialData?.ingredients?.length ?? 1)
+
+const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
+  useUnsavedChanges(isDirty)
+
   async function handleSave() {
     if (!title.trim()) {
       toast.error("Please enter a recipe title")
@@ -109,12 +126,14 @@ export function RecipeForm({ mode, initialData }: RecipeFormProps) {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-            <Link
-              href={isEdit ? `/recipe/${initialData!.id}` : "/"}
+           <button
+              onClick={() =>
+                guardNavigation(isEdit ? `/recipe/${initialData!.id}` : "/")
+              }
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Cancel
-            </Link>
+          </button>
             <h1 className="text-sm font-semibold text-foreground">
               {isEdit ? "Edit Recipe" : "New Recipe"}
             </h1>
@@ -200,6 +219,11 @@ export function RecipeForm({ mode, initialData }: RecipeFormProps) {
           )}
         </div>
       </div>
+      <UnsavedChangesDialog
+        open={showDialog}
+        onConfirm={confirmLeave}
+        onCancel={cancelLeave}
+      />
     </div>
   )
 }
