@@ -2,12 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BookOpen, PlusCircle, ShoppingCart } from "lucide-react"
+import { BookOpen, CalendarDays, PlusCircle, ShoppingCart } from "lucide-react"
 import { SettingsMenu } from "./settings-menu"
 
 const NAV_ITEMS = [
   { href: "/", label: "Recipes", icon: BookOpen },
   { href: "/create", label: "Create", icon: PlusCircle },
+  { href: "/meal-planner", label: "Planner", icon: CalendarDays },
   { href: "/shopping", label: "Shopping", icon: ShoppingCart },
 ]
 

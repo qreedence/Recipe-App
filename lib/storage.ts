@@ -1,5 +1,7 @@
 import { db } from "./db"
-import { Recipe, ShoppingItem } from "./types"
+import { MealPlanEntry, Recipe, ShoppingItem } from "./types"
+
+// Recipes
 
 export async function getRecipes(): Promise<Recipe[]> {
   return db.recipes.orderBy("createdAt").reverse().toArray()
@@ -47,4 +49,18 @@ export async function clearCheckedItems(): Promise<void> {
 
 export async function clearAllShoppingItems(): Promise<void> {
   await db.shoppingItems.clear()
+}
+
+// Meal plan
+
+export async function getMealPlanEntries(weekDates: string[]): Promise<MealPlanEntry[]> {
+  return db.mealPlanEntries.where("date").anyOf(weekDates).toArray()
+}
+
+export async function saveMealPlanEntry(entry: MealPlanEntry): Promise<void> {
+  await db.mealPlanEntries.put(entry)
+}
+
+export async function deleteMealPlanEntry(id: string): Promise<void> {
+  await db.mealPlanEntries.delete(id)
 }

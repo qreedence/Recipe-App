@@ -27,6 +27,16 @@ export interface Recipe {
   createdAt: number
 }
 
+export interface MealPlanEntry {
+  id: string              // "2025-03-12_Lunch" — unique per slot
+  date: string            // "2025-03-12" — ISO date, indexable for week queries
+  mealType: "Lunch" | "Dinner"
+  recipeId: string
+  recipeTitle: string
+  recipeMacros: Macros
+  recipeImage: string | null
+}
+
 export const PRESET_TAGS = [
   "Chicken",
   "Beef",
