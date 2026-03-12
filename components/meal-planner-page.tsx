@@ -1,12 +1,20 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Plus, CalendarDays } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, X, Flame } from "lucide-react"
 import { useSwipeable } from "react-swipeable"
-import { RecipePickerModal } from "./recipe-picker-modal"
+import { RecipePickerModal, PickedRecipe } from "./recipe-picker-modal"
+import { useMealPlan } from "@/hooks/use-meal-plan"
+import type { MealPlanEntry } from "@/lib/types"
 
 const MEAL_TYPES = ["Lunch", "Dinner"] as const
+type MealType = (typeof MEAL_TYPES)[number]
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const
+
+type MealSlot = {
+  dayIndex: number
+  mealType: MealType
+}
 
 function getWeekDates(): Date[] {
   const today = new Date()
@@ -20,6 +28,13 @@ function getWeekDates(): Date[] {
     d.setDate(monday.getDate() + i)
     return d
   })
+}
+
+function toDateString(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
 }
 
 function isToday(date: Date): boolean {
@@ -39,6 +54,8 @@ function formatDayHeader(date: Date): string {
   })
 }
 
+// Slot components
+
 function EmptySlot({ mealType, onClick }: { mealType: string; onClick: () => void }) {
   return (
     <button
@@ -54,19 +71,78 @@ function EmptySlot({ mealType, onClick }: { mealType: string; onClick: () => voi
   )
 }
 
-// ── Mobile: one day at a time ──────────────────────────────
+function FilledSlot({
+  entry,
+  onRemove,
+}: {
+  entry: MealPlanEntry
+  onRemove: () => void
+}) {
+  const perPortion = {
+    kcal: Math.round(entry.recipeMacros.kcal),
+    protein: Math.round(entry.recipeMacros.protein),
+  }
+
+  return (
+    <div className="relative w-full p-3 rounded-xl border border-border bg-card">
+      <button
+        onClick={onRemove}
+        className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted transition-colors"
+        aria-label={`Remove ${entry.recipeTitle}`}
+      >
+        <X className="h-3.5 w-3.5 text-muted-foreground" />
+      </button>
+      <p className="text-sm font-medium text-foreground pr-6 leading-tight">
+        {entry.recipeTitle}
+      </p>
+      <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+        <span className="flex items-center gap-0.5">
+          <Flame className="h-3 w-3" />
+          {perPortion.kcal} kcal
+        </span>
+        <span>{perPortion.protein}g protein</span>
+      </p>
+    </div>
+  )
+}
+
+function MealSlotCell({
+  date,
+  mealType,
+  entry,
+  onAdd,
+  onRemove,
+}: {
+  date: Date
+  mealType: MealType
+  entry?: MealPlanEntry
+  onAdd: () => void
+  onRemove: (id: string) => void
+}) {
+  return entry ? (
+    <FilledSlot entry={entry} onRemove={() => onRemove(entry.id)} />
+  ) : (
+    <EmptySlot mealType={mealType} onClick={onAdd} />
+  )
+}
+
+// Mobile: one-day view
 function MobileDayView({
   dates,
   selectedIndex,
   onPrev,
   onNext,
+  entries,
   onSlotClick,
+  onRemove,
 }: {
   dates: Date[]
   selectedIndex: number
   onPrev: () => void
   onNext: () => void
-  onSlotClick: () => void
+  entries: MealPlanEntry[]
+  onSlotClick: (slot: MealSlot) => void
+  onRemove: (id: string) => void
 }) {
   const [displayIndex, setDisplayIndex] = useState(selectedIndex)
   const [pendingIndex, setPendingIndex] = useState<number | null>(null)
@@ -97,16 +173,30 @@ function MobileDayView({
   })
 
   function DayContent({ index }: { index: number }) {
+    const date = dates[index]
+    const dateStr = toDateString(date)
+
     return (
       <div className="px-4 flex flex-col gap-3 w-full shrink-0">
-        {MEAL_TYPES.map((meal) => (
-          <section key={meal}>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              {meal}
-            </h2>
-            <EmptySlot mealType={meal} onClick={onSlotClick} />
-          </section>
-        ))}
+        {MEAL_TYPES.map((meal) => {
+          const entry = entries.find(
+            (e) => e.date === dateStr && e.mealType === meal
+          )
+          return (
+            <section key={meal}>
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                {meal}
+              </h2>
+              <MealSlotCell
+                date={date}
+                mealType={meal}
+                entry={entry}
+                onAdd={() => onSlotClick({ dayIndex: index, mealType: meal })}
+                onRemove={onRemove}
+              />
+            </section>
+          )
+        })}
       </div>
     )
   }
@@ -115,7 +205,6 @@ function MobileDayView({
 
   return (
     <div {...swipeHandlers} className="min-h-[calc(100vh-8rem)] overflow-hidden">
-      {/* Day navigator */}
       <div className="flex items-center justify-between px-4 py-3">
         <button
           onClick={() => navigate("right")}
@@ -143,7 +232,6 @@ function MobileDayView({
         </button>
       </div>
 
-      {/* Carousel track */}
       <div
         className={`flex ${isAnimating ? "transition-transform duration-150 ease-out" : ""}`}
         style={{
@@ -169,13 +257,17 @@ function MobileDayView({
   )
 }
 
-// ── Desktop: full week grid ────────────────────────────────
+// Desktop: full week grid
 function DesktopWeekGrid({
   dates,
+  entries,
   onSlotClick,
+  onRemove,
 }: {
   dates: Date[]
-  onSlotClick: () => void
+  entries: MealPlanEntry[]
+  onSlotClick: (slot: MealSlot) => void
+  onRemove: (id: string) => void
 }) {
   return (
     <div className="grid grid-cols-7 gap-3">
@@ -201,24 +293,37 @@ function DesktopWeekGrid({
       })}
 
       {MEAL_TYPES.map((meal) =>
-        dates.map((_, i) => (
-          <div key={`${meal}-${i}`}>
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
-              {meal}
-            </p>
-            <EmptySlot mealType={meal} onClick={onSlotClick} />
-          </div>
-        ))
+        dates.map((date, i) => {
+          const dateStr = toDateString(date)
+          const entry = entries.find(
+            (e) => e.date === dateStr && e.mealType === meal
+          )
+          return (
+            <div key={`${meal}-${i}`}>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+                {meal}
+              </p>
+              <MealSlotCell
+                date={date}
+                mealType={meal}
+                entry={entry}
+                onAdd={() => onSlotClick({ dayIndex: i, mealType: meal })}
+                onRemove={onRemove}
+              />
+            </div>
+          )
+        })
       )}
     </div>
   )
 }
 
-// ── Main page ──────────────────────────────────────────────
+// Main page
 export function MealPlannerPage() {
   const [dates, setDates] = useState<Date[]>([])
   const [selectedDay, setSelectedDay] = useState(0)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [activeSlot, setActiveSlot] = useState<MealSlot | null>(null)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -228,6 +333,36 @@ export function MealPlannerPage() {
     setSelectedDay(todayIdx >= 0 ? todayIdx : 0)
     setMounted(true)
   }, [])
+
+  const weekDateStrings = useMemo(
+    () => dates.map(toDateString),
+    [dates]
+  )
+
+  const { entries, addEntry, removeEntry } = useMealPlan(weekDateStrings)
+
+  function handleSlotClick(slot: MealSlot) {
+    setActiveSlot(slot)
+    setPickerOpen(true)
+  }
+
+  function handleRecipePicked(recipe: PickedRecipe) {
+    if (!activeSlot) return
+
+    const dateStr = toDateString(dates[activeSlot.dayIndex])
+    const entry: MealPlanEntry = {
+      id: `${dateStr}_${activeSlot.mealType}`,
+      date: dateStr,
+      mealType: activeSlot.mealType,
+      recipeId: recipe.id,
+      recipeTitle: recipe.title,
+      recipeMacros: recipe.macros,
+      recipeImage: recipe.image,
+    }
+
+    addEntry(entry)
+    setActiveSlot(null)
+  }
 
   function goPrev() {
     setSelectedDay((d) => Math.max(0, d - 1))
@@ -248,32 +383,35 @@ export function MealPlannerPage() {
       </header>
 
       <main className="max-w-5xl mx-auto py-4 lg:px-4">
-        {/* Mobile view */}
         <div className="lg:hidden">
           <MobileDayView
             dates={dates}
             selectedIndex={selectedDay}
             onPrev={goPrev}
             onNext={goNext}
-            onSlotClick={() => setPickerOpen(true)}
+            entries={entries}
+            onSlotClick={handleSlotClick}
+            onRemove={removeEntry}
           />
         </div>
 
-        {/* Desktop view */}
         <div className="hidden lg:block">
           <DesktopWeekGrid
             dates={dates}
-            onSlotClick={() => setPickerOpen(true)}
+            entries={entries}
+            onSlotClick={handleSlotClick}
+            onRemove={removeEntry}
           />
         </div>
       </main>
 
       <RecipePickerModal
         open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onSelect={(recipe) => {
-          console.log("Picked:", recipe)
+        onClose={() => {
+          setPickerOpen(false)
+          setActiveSlot(null)
         }}
+        onSelect={handleRecipePicked}
       />
     </div>
   )
