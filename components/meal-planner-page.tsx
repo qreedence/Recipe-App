@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Plus, CalendarDays } from "lucide-react"
 import { useSwipeable } from "react-swipeable"
+import { RecipePickerModal } from "./recipe-picker-modal"
 
 const MEAL_TYPES = ["Lunch", "Dinner"] as const
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const
@@ -10,7 +11,6 @@ const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const
 function getWeekDates(): Date[] {
   const today = new Date()
   const day = today.getDay()
-  // getDay() returns 0 for Sunday — shift so Monday = 0
   const mondayOffset = day === 0 ? -6 : 1 - day
   const monday = new Date(today)
   monday.setDate(today.getDate() + mondayOffset)
@@ -39,9 +39,10 @@ function formatDayHeader(date: Date): string {
   })
 }
 
-function EmptySlot({ mealType }: { mealType: string }) {
+function EmptySlot({ mealType, onClick }: { mealType: string; onClick: () => void }) {
   return (
     <button
+      onClick={onClick}
       className="w-full flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/40 hover:bg-primary/5 transition-colors duration-150 cursor-pointer"
       aria-label={`Add ${mealType}`}
     >
@@ -59,11 +60,13 @@ function MobileDayView({
   selectedIndex,
   onPrev,
   onNext,
+  onSlotClick,
 }: {
   dates: Date[]
   selectedIndex: number
   onPrev: () => void
   onNext: () => void
+  onSlotClick: () => void
 }) {
   const [displayIndex, setDisplayIndex] = useState(selectedIndex)
   const [pendingIndex, setPendingIndex] = useState<number | null>(null)
@@ -94,7 +97,6 @@ function MobileDayView({
   })
 
   function DayContent({ index }: { index: number }) {
-    const date = dates[index]
     return (
       <div className="px-4 flex flex-col gap-3 w-full shrink-0">
         {MEAL_TYPES.map((meal) => (
@@ -102,7 +104,7 @@ function MobileDayView({
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               {meal}
             </h2>
-            <EmptySlot mealType={meal} />
+            <EmptySlot mealType={meal} onClick={onSlotClick} />
           </section>
         ))}
       </div>
@@ -153,17 +155,12 @@ function MobileDayView({
         }}
         onTransitionEnd={handleTransitionEnd}
       >
-        {/* Previous day (off-screen left) */}
         {direction === "right" && pendingIndex !== null && (
           <div className="w-full shrink-0 -ml-[100%]">
             <DayContent index={pendingIndex} />
           </div>
         )}
-
-        {/* Current day */}
         <DayContent index={displayIndex} />
-
-        {/* Next day (off-screen right) */}
         {direction === "left" && pendingIndex !== null && (
           <DayContent index={pendingIndex} />
         )}
@@ -173,10 +170,15 @@ function MobileDayView({
 }
 
 // ── Desktop: full week grid ────────────────────────────────
-function DesktopWeekGrid({ dates }: { dates: Date[] }) {
+function DesktopWeekGrid({
+  dates,
+  onSlotClick,
+}: {
+  dates: Date[]
+  onSlotClick: () => void
+}) {
   return (
     <div className="grid grid-cols-7 gap-3">
-      {/* Day headers */}
       {dates.map((date, i) => {
         const today = isToday(date)
         return (
@@ -198,14 +200,13 @@ function DesktopWeekGrid({ dates }: { dates: Date[] }) {
         )
       })}
 
-      {/* Meal rows */}
       {MEAL_TYPES.map((meal) =>
         dates.map((_, i) => (
           <div key={`${meal}-${i}`}>
             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
               {meal}
             </p>
-            <EmptySlot mealType={meal} />
+            <EmptySlot mealType={meal} onClick={onSlotClick} />
           </div>
         ))
       )}
@@ -217,16 +218,16 @@ function DesktopWeekGrid({ dates }: { dates: Date[] }) {
 export function MealPlannerPage() {
   const [dates, setDates] = useState<Date[]>([])
   const [selectedDay, setSelectedDay] = useState(0)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-
-useEffect(() => {
-  const weekDates = getWeekDates()
-  setDates(weekDates)
-  const todayIdx = weekDates.findIndex(isToday)
-  setSelectedDay(todayIdx >= 0 ? todayIdx : 0)
-  setMounted(true)
-}, [])
+  useEffect(() => {
+    const weekDates = getWeekDates()
+    setDates(weekDates)
+    const todayIdx = weekDates.findIndex(isToday)
+    setSelectedDay(todayIdx >= 0 ? todayIdx : 0)
+    setMounted(true)
+  }, [])
 
   function goPrev() {
     setSelectedDay((d) => Math.max(0, d - 1))
@@ -236,7 +237,7 @@ useEffect(() => {
     setSelectedDay((d) => Math.min(6, d + 1))
   }
 
-if (!mounted) return null
+  if (!mounted) return null
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
@@ -254,14 +255,26 @@ if (!mounted) return null
             selectedIndex={selectedDay}
             onPrev={goPrev}
             onNext={goNext}
+            onSlotClick={() => setPickerOpen(true)}
           />
         </div>
 
         {/* Desktop view */}
         <div className="hidden lg:block">
-          <DesktopWeekGrid dates={dates} />
+          <DesktopWeekGrid
+            dates={dates}
+            onSlotClick={() => setPickerOpen(true)}
+          />
         </div>
       </main>
+
+      <RecipePickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(recipe) => {
+          console.log("Picked:", recipe)
+        }}
+      />
     </div>
   )
 }

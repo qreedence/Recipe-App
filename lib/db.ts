@@ -11,4 +11,8 @@ db.version(1).stores({
   shoppingItems: "id, checked, category, recipeId, createdAt",
 })
 
+db.version(2).stores({
+  mealPlanEntries: "id, date, mealType",
+})
+
 export { db }
