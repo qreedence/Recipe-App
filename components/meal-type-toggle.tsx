@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useState } from 'react'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ALL_MEAL_TYPES, MealType } from "@/lib/types"
+} from '@/components/ui/sheet'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ALL_MEAL_TYPES, MealType } from '@/lib/types'
 
 interface MealTypeToggleProps {
   dayIndex: number
@@ -33,10 +33,7 @@ function MealTypeCheckboxList({
       {ALL_MEAL_TYPES.map((type) => {
         const checked = enabledTypes.includes(type)
         return (
-          <label
-            key={type}
-            className="flex items-center gap-3 cursor-pointer"
-          >
+          <label key={type} className="flex items-center gap-3 cursor-pointer">
             <Checkbox
               checked={checked}
               onCheckedChange={(val) => onToggle(type, val === true)}
@@ -61,9 +58,7 @@ export function MealTypeToggle({
   const isMobile = useIsMobile()
 
   function handleToggle(type: MealType, checked: boolean) {
-    const next = checked
-      ? [...enabledTypes, type]
-      : enabledTypes.filter((t) => t !== type)
+    const next = checked ? [...enabledTypes, type] : enabledTypes.filter((t) => t !== type)
     onToggle(dayIndex, next)
   }
 
@@ -78,10 +73,7 @@ export function MealTypeToggle({
               <SheetDescription>Choose which meals to plan for this day.</SheetDescription>
             </SheetHeader>
             <div className="px-4 pb-6">
-              <MealTypeCheckboxList
-                enabledTypes={enabledTypes}
-                onToggle={handleToggle}
-              />
+              <MealTypeCheckboxList enabledTypes={enabledTypes} onToggle={handleToggle} />
             </div>
           </SheetContent>
         </Sheet>
@@ -94,10 +86,7 @@ export function MealTypeToggle({
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-48">
         <p className="text-sm font-semibold mb-3">Meals</p>
-        <MealTypeCheckboxList
-          enabledTypes={enabledTypes}
-          onToggle={handleToggle}
-        />
+        <MealTypeCheckboxList enabledTypes={enabledTypes} onToggle={handleToggle} />
       </PopoverContent>
     </Popover>
   )
