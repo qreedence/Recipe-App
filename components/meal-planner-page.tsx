@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useState, useMemo, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Plus, X, Flame, Drumstick } from "lucide-react"
-import { useSwipeable } from "react-swipeable"
-import { RecipePickerModal, PickedRecipe } from "./recipe-picker-modal"
-import { useMealPlan } from "@/hooks/use-meal-plan"
-import type { MealPlanEntry } from "@/lib/types"
-import Link from "next/link"
+import { useState, useMemo, useEffect } from 'react'
+import { ChevronLeft, ChevronRight, Plus, X, Flame, Drumstick } from 'lucide-react'
+import { useSwipeable } from 'react-swipeable'
+import { RecipePickerModal, PickedRecipe } from './recipe-picker-modal'
+import { useMealPlan } from '@/hooks/use-meal-plan'
+import { ALL_MEAL_TYPES, type MealType, type MealPlanEntry } from '@/lib/types'
+import { useMealTypeConfig } from '@/hooks/use-meal-type-config'
+import Link from 'next/link'
+import { MealTypeToggle } from './meal-type-toggle'
 
-const MEAL_TYPES = ["Lunch", "Dinner"] as const
-type MealType = (typeof MEAL_TYPES)[number]
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
 type MealSlot = {
   dayIndex: number
@@ -33,8 +33,8 @@ function getWeekDates(): Date[] {
 
 function toDateString(date: Date): string {
   const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
 }
 
@@ -48,10 +48,10 @@ function isToday(date: Date): boolean {
 }
 
 function formatDayHeader(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
   })
 }
 
@@ -87,13 +87,15 @@ function FilledSlot({
   }
 
   return (
-    <div className={`relative w-full rounded-xl border border-border bg-card overflow-hidden flex ${
-      compact ? "flex-col" : ""
-    }`}>
+    <div
+      className={`relative w-full rounded-xl border border-border bg-card overflow-hidden flex ${
+        compact ? 'flex-col' : ''
+      }`}
+    >
       <Link
         href={`/recipe/${entry.recipeId}`}
         className={`shrink-0 bg-muted block ${
-          compact ? "w-full aspect-[4/3] overflow-hidden" : "w-20 h-20"
+          compact ? 'w-full aspect-[4/3] overflow-hidden' : 'w-20 h-20'
         }`}
       >
         {entry.recipeImage ? (
@@ -113,9 +115,11 @@ function FilledSlot({
         href={`/recipe/${entry.recipeId}`}
         className="flex-1 min-w-0 p-2.5 flex flex-col justify-center"
       >
-        <p className={`font-semibold text-card-foreground leading-tight line-clamp-2 pr-6 ${
-          compact ? "text-xs" : "text-sm"
-        }`}>
+        <p
+          className={`font-semibold text-card-foreground leading-tight line-clamp-2 pr-6 ${
+            compact ? 'text-xs' : 'text-sm'
+          }`}
+        >
           {entry.recipeTitle}
         </p>
         <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
@@ -172,6 +176,8 @@ function MobileDayView({
   entries,
   onSlotClick,
   onRemove,
+  getEnabledTypes,
+  setEnabledTypes,
 }: {
   dates: Date[]
   selectedIndex: number
@@ -180,14 +186,16 @@ function MobileDayView({
   entries: MealPlanEntry[]
   onSlotClick: (slot: MealSlot) => void
   onRemove: (id: string) => void
+  getEnabledTypes: (dayIndex: number) => MealType[]
+  setEnabledTypes: (dayIndex: number, types: MealType[]) => void
 }) {
   const [displayIndex, setDisplayIndex] = useState(selectedIndex)
   const [pendingIndex, setPendingIndex] = useState<number | null>(null)
-  const [direction, setDirection] = useState<"left" | "right" | null>(null)
+  const [direction, setDirection] = useState<'left' | 'right' | null>(null)
 
-  function navigate(dir: "left" | "right") {
+  function navigate(dir: 'left' | 'right') {
     if (pendingIndex !== null) return
-    const next = dir === "left" ? displayIndex + 1 : displayIndex - 1
+    const next = dir === 'left' ? displayIndex + 1 : displayIndex - 1
     if (next < 0 || next > 6) return
     setDirection(dir)
     setPendingIndex(next)
@@ -195,16 +203,16 @@ function MobileDayView({
 
   function handleTransitionEnd() {
     if (pendingIndex === null) return
-    if (direction === "left") onNext()
-    if (direction === "right") onPrev()
+    if (direction === 'left') onNext()
+    if (direction === 'right') onPrev()
     setDisplayIndex(pendingIndex)
     setPendingIndex(null)
     setDirection(null)
   }
 
   const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => navigate("left"),
-    onSwipedRight: () => navigate("right"),
+    onSwipedLeft: () => navigate('left'),
+    onSwipedRight: () => navigate('right'),
     preventScrollOnSwipe: true,
     trackTouch: true,
   })
@@ -215,10 +223,8 @@ function MobileDayView({
 
     return (
       <div className="px-4 flex flex-col gap-3 w-full shrink-0">
-        {MEAL_TYPES.map((meal) => {
-          const entry = entries.find(
-            (e) => e.date === dateStr && e.mealType === meal
-          )
+        {getEnabledTypes(index).map((meal) => {
+          const entry = entries.find((e) => e.date === dateStr && e.mealType === meal)
           return (
             <section key={meal}>
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -244,23 +250,39 @@ function MobileDayView({
     <div {...swipeHandlers} className="min-h-[calc(100vh-8rem)] overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3">
         <button
-          onClick={() => navigate("right")}
+          onClick={() => navigate('right')}
           disabled={displayIndex === 0}
           className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-30"
           aria-label="Previous day"
         >
           <ChevronLeft className="h-5 w-5 text-foreground" />
         </button>
-        <div className="text-center">
-          <p className="text-sm font-semibold text-foreground">
-            {formatDayHeader(dates[pendingIndex ?? displayIndex])}
-          </p>
-          {isToday(dates[pendingIndex ?? displayIndex]) && (
-            <p className="text-xs text-primary font-medium">Today</p>
-          )}
-        </div>
+        <MealTypeToggle
+          dayIndex={pendingIndex ?? displayIndex}
+          dayLabel={formatDayHeader(dates[pendingIndex ?? displayIndex])}
+          enabledTypes={getEnabledTypes(pendingIndex ?? displayIndex)}
+          onToggle={(di, types) => setEnabledTypes(di, types)}
+          hasRecipe={(mealType) => {
+            const dateStr = toDateString(dates[pendingIndex ?? displayIndex])
+            return entries.some((e) => e.date === dateStr && e.mealType === mealType)
+          }}
+          onRemoveEntry={(mealType) => {
+            const dateStr = toDateString(dates[pendingIndex ?? displayIndex])
+            const entry = entries.find((e) => e.date === dateStr && e.mealType === mealType)
+            if (entry) onRemove(entry.id)
+          }}
+        >
+          <div className="text-center cursor-pointer">
+            <p className="text-sm font-semibold text-foreground">
+              {formatDayHeader(dates[pendingIndex ?? displayIndex])}
+            </p>
+            {isToday(dates[pendingIndex ?? displayIndex]) && (
+              <p className="text-xs text-primary font-medium">Today</p>
+            )}
+          </div>
+        </MealTypeToggle>
         <button
-          onClick={() => navigate("left")}
+          onClick={() => navigate('left')}
           disabled={displayIndex === 6}
           className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-30"
           aria-label="Next day"
@@ -270,25 +292,23 @@ function MobileDayView({
       </div>
 
       <div
-        className={`flex ${isAnimating ? "transition-transform duration-150 ease-out" : ""}`}
+        className={`flex ${isAnimating ? 'transition-transform duration-150 ease-out' : ''}`}
         style={{
           transform: isAnimating
-            ? direction === "left"
-              ? "translateX(-100%)"
-              : "translateX(100%)"
-            : "translateX(0)",
+            ? direction === 'left'
+              ? 'translateX(-100%)'
+              : 'translateX(100%)'
+            : 'translateX(0)',
         }}
         onTransitionEnd={handleTransitionEnd}
       >
-        {direction === "right" && pendingIndex !== null && (
+        {direction === 'right' && pendingIndex !== null && (
           <div className="w-full shrink-0 -ml-[100%]">
             <DayContent index={pendingIndex} />
           </div>
         )}
         <DayContent index={displayIndex} />
-        {direction === "left" && pendingIndex !== null && (
-          <DayContent index={pendingIndex} />
-        )}
+        {direction === 'left' && pendingIndex !== null && <DayContent index={pendingIndex} />}
       </div>
     </div>
   )
@@ -300,58 +320,85 @@ function DesktopWeekGrid({
   entries,
   onSlotClick,
   onRemove,
+  getEnabledTypes,
+  setEnabledTypes,
 }: {
   dates: Date[]
   entries: MealPlanEntry[]
   onSlotClick: (slot: MealSlot) => void
   onRemove: (id: string) => void
+  getEnabledTypes: (dayIndex: number) => MealType[]
+  setEnabledTypes: (dayIndex: number, types: MealType[]) => void
 }) {
   return (
     <div className="grid grid-cols-7 gap-3">
       {dates.map((date, i) => {
         const today = isToday(date)
         return (
-          <div
+          <MealTypeToggle
             key={i}
-            className={`text-center rounded-lg px-2 py-2 ${
-              today
-                ? "bg-primary text-primary-foreground"
-                : "bg-card border border-border"
-            }`}
+            dayIndex={i}
+            dayLabel={`${DAY_LABELS[i]} ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+            enabledTypes={getEnabledTypes(i)}
+            onToggle={(di, types) => setEnabledTypes(di, types)}
+            hasRecipe={(mealType) => {
+              const dateStr = toDateString(dates[i])
+              return entries.some((e) => e.date === dateStr && e.mealType === mealType)
+            }}
+            onRemoveEntry={(mealType) => {
+              const dateStr = toDateString(dates[i])
+              const entry = entries.find((e) => e.date === dateStr && e.mealType === mealType)
+              if (entry) onRemove(entry.id)
+            }}
           >
-            <p className={`text-xs font-semibold ${today ? "text-primary-foreground" : "text-foreground"}`}>
-              {DAY_LABELS[i]}
-            </p>
-            <p className={`text-[11px] ${today ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-              {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-            </p>
-          </div>
+            <div
+              className={`text-center rounded-lg px-2 py-2 cursor-pointer transition-colors ${
+                today
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card border border-border hover:bg-accent'
+              }`}
+            >
+              <p
+                className={`text-xs font-semibold ${today ? 'text-primary-foreground' : 'text-foreground'}`}
+              >
+                {DAY_LABELS[i]}
+              </p>
+              <p
+                className={`text-[11px] ${today ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}
+              >
+                {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </p>
+            </div>
+          </MealTypeToggle>
         )
       })}
 
-      {MEAL_TYPES.map((meal) =>
-        dates.map((date, i) => {
-          const dateStr = toDateString(date)
-          const entry = entries.find(
-            (e) => e.date === dateStr && e.mealType === meal
-          )
-          return (
-            <div key={`${meal}-${i}`}>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
-                {meal}
-              </p>
-              <MealSlotCell
-                date={date}
-                mealType={meal}
-                entry={entry}
-                onAdd={() => onSlotClick({ dayIndex: i, mealType: meal })}
-                onRemove={onRemove}
-                compact
-              />
-            </div>
-          )
-        })
-      )}
+      {dates.map((date, i) => {
+        const dateStr = toDateString(date)
+        const enabled = getEnabledTypes(i)
+        return (
+          <div key={`col-${i}`} className="flex flex-col gap-3">
+            {enabled.map((meal) => {
+              const entry = entries.find((e) => e.date === dateStr && e.mealType === meal)
+              return (
+                <div key={meal}>
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+                    {meal}
+                  </p>
+                  <MealSlotCell
+                    date={date}
+                    mealType={meal}
+                    entry={entry}
+                    onAdd={() => onSlotClick({ dayIndex: i, mealType: meal })}
+                    onRemove={onRemove}
+                    compact
+                  />
+                </div>
+              )
+            })}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -372,12 +419,10 @@ export function MealPlannerPage() {
     setMounted(true)
   }, [])
 
-  const weekDateStrings = useMemo(
-    () => dates.map(toDateString),
-    [dates]
-  )
+  const weekDateStrings = useMemo(() => dates.map(toDateString), [dates])
 
   const { entries, addEntry, removeEntry } = useMealPlan(weekDateStrings)
+  const { getEnabledTypes, setEnabledTypes } = useMealTypeConfig()
 
   function handleSlotClick(slot: MealSlot) {
     setActiveSlot(slot)
@@ -430,6 +475,8 @@ export function MealPlannerPage() {
             entries={entries}
             onSlotClick={handleSlotClick}
             onRemove={removeEntry}
+            getEnabledTypes={getEnabledTypes}
+            setEnabledTypes={setEnabledTypes}
           />
         </div>
 
@@ -439,6 +486,8 @@ export function MealPlannerPage() {
             entries={entries}
             onSlotClick={handleSlotClick}
             onRemove={removeEntry}
+            getEnabledTypes={getEnabledTypes}
+            setEnabledTypes={setEnabledTypes}
           />
         </div>
       </main>

@@ -1,5 +1,5 @@
 import { db } from "./db"
-import { MealPlanEntry, Recipe, ShoppingItem } from "./types"
+import { MealPlanEntry, MealTypeConfig, Recipe, ShoppingItem } from "./types"
 
 // Recipes
 
@@ -63,4 +63,14 @@ export async function saveMealPlanEntry(entry: MealPlanEntry): Promise<void> {
 
 export async function deleteMealPlanEntry(id: string): Promise<void> {
   await db.mealPlanEntries.delete(id)
+}
+
+// Meal type config
+
+export async function getMealTypeConfigs(): Promise<MealTypeConfig[]> {
+  return db.mealTypeConfig.toArray()
+}
+
+export async function saveMealTypeConfig(config: MealTypeConfig): Promise<void> {
+  await db.mealTypeConfig.put(config)
 }

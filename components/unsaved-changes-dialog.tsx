@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
   AlertDialog,
@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog'
 
 interface UnsavedChangesDialogProps {
   open: boolean
@@ -17,11 +17,7 @@ interface UnsavedChangesDialogProps {
   onCancel: () => void
 }
 
-export function UnsavedChangesDialog({
-  open,
-  onConfirm,
-  onCancel,
-}: UnsavedChangesDialogProps) {
+export function UnsavedChangesDialog({ open, onConfirm, onCancel }: UnsavedChangesDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={(v) => !v && onCancel()}>
       <AlertDialogContent>
@@ -31,13 +27,12 @@ export function UnsavedChangesDialog({
             If you leave now, your progress will be lost. Are you sure?
           </AlertDialogDescription>
         </AlertDialogHeader>
-<AlertDialogFooter className="flex-row justify-center items-center sm:justify-center">
-          <AlertDialogCancel onClick={onCancel} >
-            Keep editing
-          </AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={onConfirm} 
-            className="p-1.5 rounded-md text-muted-foreground/40 text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors duration-150">
+        <AlertDialogFooter className="flex-row justify-center items-center sm:justify-center">
+          <AlertDialogCancel onClick={onCancel}>Keep editing</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-md text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors duration-150"
+          >
             Discard changes
           </AlertDialogAction>
         </AlertDialogFooter>
