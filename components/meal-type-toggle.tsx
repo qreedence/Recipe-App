@@ -10,6 +10,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ALL_MEAL_TYPES, MealType } from '@/lib/types'
 
@@ -18,6 +27,8 @@ interface MealTypeToggleProps {
   dayLabel: string
   enabledTypes: MealType[]
   onToggle: (dayIndex: number, types: MealType[]) => void
+  hasRecipe: (mealType: MealType) => boolean
+  onRemoveEntry: (mealType: MealType) => void
   children: React.ReactNode
 }
 
@@ -53,13 +64,38 @@ export function MealTypeToggle({
   enabledTypes,
   onToggle,
   children,
+  hasRecipe,
+  onRemoveEntry,
 }: MealTypeToggleProps) {
   const [open, setOpen] = useState(false)
+  const [pendingRemove, setPendingRemove] = useState<MealType | null>(null)
   const isMobile = useIsMobile()
 
   function handleToggle(type: MealType, checked: boolean) {
-    const next = checked ? [...enabledTypes, type] : enabledTypes.filter((t) => t !== type)
-    onToggle(dayIndex, next)
+    if (checked) {
+      onToggle(dayIndex, [...enabledTypes, type])
+      return
+    }
+
+    if (hasRecipe(type)) {
+      setPendingRemove(type)
+      return
+    }
+
+    onToggle(
+      dayIndex,
+      enabledTypes.filter((t) => t !== type),
+    )
+  }
+
+  function confirmRemove() {
+    if (!pendingRemove) return
+    onRemoveEntry(pendingRemove)
+    onToggle(
+      dayIndex,
+      enabledTypes.filter((t) => t !== pendingRemove),
+    )
+    setPendingRemove(null)
   }
 
   if (isMobile) {
@@ -77,6 +113,28 @@ export function MealTypeToggle({
             </div>
           </SheetContent>
         </Sheet>
+        <Dialog
+          open={pendingRemove !== null}
+          onOpenChange={(open) => !open && setPendingRemove(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Remove planned meal?</DialogTitle>
+              <DialogDescription>
+                You have a recipe planned for {pendingRemove?.toLowerCase()}. Removing this meal
+                type will delete it.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPendingRemove(null)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmRemove}>
+                Remove
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </>
     )
   }
@@ -88,6 +146,28 @@ export function MealTypeToggle({
         <p className="text-sm font-semibold mb-3">Meals</p>
         <MealTypeCheckboxList enabledTypes={enabledTypes} onToggle={handleToggle} />
       </PopoverContent>
+      <Dialog
+        open={pendingRemove !== null}
+        onOpenChange={(open) => !open && setPendingRemove(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove planned meal?</DialogTitle>
+            <DialogDescription>
+              You have a recipe planned for {pendingRemove?.toLowerCase()}. Removing this meal type
+              will delete it.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingRemove(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmRemove}>
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Popover>
   )
 }

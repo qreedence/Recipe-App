@@ -8,7 +8,7 @@ import { useMealPlan } from '@/hooks/use-meal-plan'
 import { ALL_MEAL_TYPES, type MealType, type MealPlanEntry } from '@/lib/types'
 import { useMealTypeConfig } from '@/hooks/use-meal-type-config'
 import Link from 'next/link'
-import { MealTypeToggle } from './use-meal-type-toggle'
+import { MealTypeToggle } from './meal-type-toggle'
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
@@ -262,6 +262,15 @@ function MobileDayView({
           dayLabel={formatDayHeader(dates[pendingIndex ?? displayIndex])}
           enabledTypes={getEnabledTypes(pendingIndex ?? displayIndex)}
           onToggle={(di, types) => setEnabledTypes(di, types)}
+          hasRecipe={(mealType) => {
+            const dateStr = toDateString(dates[pendingIndex ?? displayIndex])
+            return entries.some((e) => e.date === dateStr && e.mealType === mealType)
+          }}
+          onRemoveEntry={(mealType) => {
+            const dateStr = toDateString(dates[pendingIndex ?? displayIndex])
+            const entry = entries.find((e) => e.date === dateStr && e.mealType === mealType)
+            if (entry) onRemove(entry.id)
+          }}
         >
           <div className="text-center cursor-pointer">
             <p className="text-sm font-semibold text-foreground">
@@ -332,6 +341,15 @@ function DesktopWeekGrid({
             dayLabel={`${DAY_LABELS[i]} ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
             enabledTypes={getEnabledTypes(i)}
             onToggle={(di, types) => setEnabledTypes(di, types)}
+            hasRecipe={(mealType) => {
+              const dateStr = toDateString(dates[i])
+              return entries.some((e) => e.date === dateStr && e.mealType === mealType)
+            }}
+            onRemoveEntry={(mealType) => {
+              const dateStr = toDateString(dates[i])
+              const entry = entries.find((e) => e.date === dateStr && e.mealType === mealType)
+              if (entry) onRemove(entry.id)
+            }}
           >
             <div
               className={`text-center rounded-lg px-2 py-2 cursor-pointer transition-colors ${
