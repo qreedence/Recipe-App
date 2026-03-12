@@ -1,10 +1,10 @@
-import { db } from "./db"
-import { MealPlanEntry, MealTypeConfig, Recipe, ShoppingItem } from "./types"
+import { db } from './db'
+import { MealPlanEntry, MealTypeConfig, Recipe, ShoppingItem } from './types'
 
 // Recipes
 
 export async function getRecipes(): Promise<Recipe[]> {
-  return db.recipes.orderBy("createdAt").reverse().toArray()
+  return db.recipes.orderBy('createdAt').reverse().toArray()
 }
 
 export async function getRecipe(id: string): Promise<Recipe | null> {
@@ -15,7 +15,10 @@ export async function saveRecipe(recipe: Recipe): Promise<void> {
   await db.recipes.put(recipe)
 }
 
-export async function updateRecipe(id: string, updates: Partial<import("./types").Recipe>): Promise<void> {
+export async function updateRecipe(
+  id: string,
+  updates: Partial<import('./types').Recipe>,
+): Promise<void> {
   await db.recipes.update(id, updates)
 }
 
@@ -26,14 +29,17 @@ export async function deleteRecipe(id: string): Promise<void> {
 // Shopping items
 
 export async function getShoppingItems(): Promise<ShoppingItem[]> {
-  return db.shoppingItems.orderBy("createdAt").toArray()
+  return db.shoppingItems.orderBy('createdAt').toArray()
 }
 
 export async function addShoppingItems(items: ShoppingItem[]): Promise<void> {
   await db.shoppingItems.bulkPut(items)
 }
 
-export async function updateShoppingItem(id: string, updates: Partial<ShoppingItem>): Promise<void> {
+export async function updateShoppingItem(
+  id: string,
+  updates: Partial<ShoppingItem>,
+): Promise<void> {
   await db.shoppingItems.update(id, updates)
 }
 
@@ -42,9 +48,9 @@ export async function deleteShoppingItem(id: string): Promise<void> {
 }
 
 export async function clearCheckedItems(): Promise<void> {
-  const all = await db.shoppingItems.toArray();
-  const checked = all.filter((i) => i.checked);
-  await db.shoppingItems.bulkDelete(checked.map((i) => i.id));
+  const all = await db.shoppingItems.toArray()
+  const checked = all.filter((i) => i.checked)
+  await db.shoppingItems.bulkDelete(checked.map((i) => i.id))
 }
 
 export async function clearAllShoppingItems(): Promise<void> {
@@ -54,7 +60,7 @@ export async function clearAllShoppingItems(): Promise<void> {
 // Meal plan
 
 export async function getMealPlanEntries(weekDates: string[]): Promise<MealPlanEntry[]> {
-  return db.mealPlanEntries.where("date").anyOf(weekDates).toArray()
+  return db.mealPlanEntries.where('date').anyOf(weekDates).toArray()
 }
 
 export async function saveMealPlanEntry(entry: MealPlanEntry): Promise<void> {
@@ -63,6 +69,11 @@ export async function saveMealPlanEntry(entry: MealPlanEntry): Promise<void> {
 
 export async function deleteMealPlanEntry(id: string): Promise<void> {
   await db.mealPlanEntries.delete(id)
+}
+
+export async function clearMealPlanEntries(weekDates: string[]): Promise<void> {
+  const entries = await db.mealPlanEntries.where('date').anyOf(weekDates).toArray()
+  await db.mealPlanEntries.bulkDelete(entries.map((e) => e.id))
 }
 
 // Meal type config
