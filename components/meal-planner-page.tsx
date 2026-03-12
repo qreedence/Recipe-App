@@ -34,6 +34,7 @@ import { ALL_MEAL_TYPES, type MealType, type MealPlanEntry } from '@/lib/types'
 import { useMealTypeConfig } from '@/hooks/use-meal-type-config'
 import Link from 'next/link'
 import { MealTypeToggle } from './meal-type-toggle'
+import { DailyMacroSummary } from './daily-macro-summary'
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
@@ -316,6 +317,14 @@ function MobileDayView({
         </button>
       </div>
 
+      <div className="px-4 pb-2">
+        <DailyMacroSummary
+          entries={entries.filter(
+            (e) => e.date === toDateString(dates[pendingIndex ?? displayIndex]),
+          )}
+        />
+      </div>
+
       <div
         className={`flex ${isAnimating ? 'transition-transform duration-150 ease-out' : ''}`}
         style={{
@@ -395,6 +404,16 @@ function DesktopWeekGrid({
               </p>
             </div>
           </MealTypeToggle>
+        )
+      })}
+
+      {dates.map((date, i) => {
+        const dateStr = toDateString(date)
+        const dayEntries = entries.filter((e) => e.date === dateStr)
+        return dayEntries.length > 0 ? (
+          <DailyMacroSummary key={`macros-${i}`} entries={dayEntries} compact />
+        ) : (
+          <div key={`macros-${i}`} className="py-1.5" />
         )
       })}
 
