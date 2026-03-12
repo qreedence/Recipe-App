@@ -30,7 +30,7 @@ export interface Recipe {
 export interface MealPlanEntry {
   id: string              // "2025-03-12_Lunch" — unique per slot
   date: string            // "2025-03-12" — ISO date, indexable for week queries
-  mealType: "Lunch" | "Dinner"
+  mealType: MealType
   recipeId: string
   recipeTitle: string
   recipeMacros: Macros
@@ -76,6 +76,23 @@ export const GROCERY_CATEGORIES = [
   "Hygiene",
   "Other",
 ] as const
+
+export const ALL_MEAL_TYPES = [
+  "Breakfast",
+  "Lunch",
+  "Dinner",
+  "Brunch",
+  "Snack",
+] as const
+
+export type MealType = (typeof ALL_MEAL_TYPES)[number]
+
+export const DEFAULT_MEAL_TYPES: MealType[] = ["Lunch", "Dinner"]
+
+export interface MealTypeConfig {
+  id: string          // weekday index "0"-"6" (Mon-Sun, matching your DAY_LABELS)
+  enabledTypes: MealType[]
+}
 
 export type GroceryCategory = (typeof GROCERY_CATEGORIES)[number]
 
