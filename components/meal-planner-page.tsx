@@ -1,7 +1,32 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X, Flame, Drumstick } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  X,
+  Flame,
+  Drumstick,
+  EllipsisVertical,
+  Trash2,
+} from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useSwipeable } from 'react-swipeable'
 import { RecipePickerModal, PickedRecipe } from './recipe-picker-modal'
 import { useMealPlan } from '@/hooks/use-meal-plan'
@@ -410,6 +435,7 @@ export function MealPlannerPage() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [activeSlot, setActiveSlot] = useState<MealSlot | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [clearDialogOpen, setClearDialogOpen] = useState(false)
 
   useEffect(() => {
     const weekDates = getWeekDates()
@@ -421,7 +447,7 @@ export function MealPlannerPage() {
 
   const weekDateStrings = useMemo(() => dates.map(toDateString), [dates])
 
-  const { entries, addEntry, removeEntry } = useMealPlan(weekDateStrings)
+  const { entries, addEntry, removeEntry, clearWeek } = useMealPlan(weekDateStrings)
   const { getEnabledTypes, setEnabledTypes } = useMealTypeConfig()
 
   function handleSlotClick(slot: MealSlot) {
@@ -460,8 +486,28 @@ export function MealPlannerPage() {
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">Meal Planner</h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-2 rounded-lg hover:bg-accent transition-colors"
+                aria-label="Menu"
+              >
+                <EllipsisVertical className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={entries.length === 0}
+                onSelect={() => setClearDialogOpen(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Clear week
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -501,6 +547,25 @@ export function MealPlannerPage() {
         onSelect={handleRecipePicked}
         plannedRecipeIds={entries.map((e) => e.recipeId)}
       />
+      <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle>Clear all meals?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all planned meals for this week.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row justify-center items-center sm:justify-center">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => clearWeek()}
+              className="text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors duration-150"
+            >
+              Clear week
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
