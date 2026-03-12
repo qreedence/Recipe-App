@@ -1,9 +1,10 @@
 import Dexie, { type EntityTable } from "dexie"
-import { Recipe, ShoppingItem } from "./types"
+import { MealPlanEntry, Recipe, ShoppingItem } from "./types"
 
 const db = new Dexie("recipebook") as Dexie & {
   recipes: EntityTable<Recipe, "id">
   shoppingItems: EntityTable<ShoppingItem, "id">
+  mealPlanEntries: EntityTable<MealPlanEntry, "id">
 }
 
 db.version(1).stores({
