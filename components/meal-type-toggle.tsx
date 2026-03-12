@@ -11,14 +11,15 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ALL_MEAL_TYPES, MealType } from '@/lib/types'
 
@@ -113,28 +114,31 @@ export function MealTypeToggle({
             </div>
           </SheetContent>
         </Sheet>
-        <Dialog
+        <AlertDialog
           open={pendingRemove !== null}
           onOpenChange={(open) => !open && setPendingRemove(null)}
         >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Remove planned meal?</DialogTitle>
-              <DialogDescription>
+          <AlertDialogContent>
+            <AlertDialogHeader className="text-center sm:text-center">
+              <AlertDialogTitle>Remove planned meal?</AlertDialogTitle>
+              <AlertDialogDescription>
                 You have a recipe planned for {pendingRemove?.toLowerCase()}. Removing this meal
                 type will delete it.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setPendingRemove(null)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={confirmRemove}>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row justify-center items-center sm:justify-center">
+              <AlertDialogCancel onClick={() => setPendingRemove(null)}>
+                Keep meal
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmRemove}
+                className="p-1.5 rounded-md text-muted-foreground/40 text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors duration-150"
+              >
                 Remove
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </>
     )
   }
@@ -146,28 +150,29 @@ export function MealTypeToggle({
         <p className="text-sm font-semibold mb-3">Meals</p>
         <MealTypeCheckboxList enabledTypes={enabledTypes} onToggle={handleToggle} />
       </PopoverContent>
-      <Dialog
+      <AlertDialog
         open={pendingRemove !== null}
         onOpenChange={(open) => !open && setPendingRemove(null)}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remove planned meal?</DialogTitle>
-            <DialogDescription>
+        <AlertDialogContent>
+          <AlertDialogHeader className="text-center sm:text-center">
+            <AlertDialogTitle>Remove planned meal?</AlertDialogTitle>
+            <AlertDialogDescription>
               You have a recipe planned for {pendingRemove?.toLowerCase()}. Removing this meal type
               will delete it.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingRemove(null)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmRemove}>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row justify-center items-center sm:justify-center">
+            <AlertDialogCancel onClick={() => setPendingRemove(null)}>Keep meal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemove}
+              className="px-4 py-2 rounded-md text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors duration-150"
+            >
               Remove
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Popover>
   )
 }
