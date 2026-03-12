@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Plus, X, Flame } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, X, Flame, Drumstick } from "lucide-react"
 import { useSwipeable } from "react-swipeable"
 import { RecipePickerModal, PickedRecipe } from "./recipe-picker-modal"
 import { useMealPlan } from "@/hooks/use-meal-plan"
 import type { MealPlanEntry } from "@/lib/types"
+import Link from "next/link"
 
 const MEAL_TYPES = ["Lunch", "Dinner"] as const
 type MealType = (typeof MEAL_TYPES)[number]
@@ -66,7 +67,7 @@ function EmptySlot({ mealType, onClick }: { mealType: string; onClick: () => voi
       <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
         <Plus className="h-4 w-4 text-muted-foreground" />
       </div>
-      <span className="text-xs text-muted-foreground">Add {mealType}</span>
+      {/* <span className="text-xs text-muted-foreground">Add {mealType}</span> */}
     </button>
   )
 }
@@ -74,9 +75,11 @@ function EmptySlot({ mealType, onClick }: { mealType: string; onClick: () => voi
 function FilledSlot({
   entry,
   onRemove,
+  compact = false,
 }: {
   entry: MealPlanEntry
   onRemove: () => void
+  compact?: boolean
 }) {
   const perPortion = {
     kcal: Math.round(entry.recipeMacros.kcal),
@@ -84,24 +87,56 @@ function FilledSlot({
   }
 
   return (
-    <div className="relative w-full p-3 rounded-xl border border-border bg-card">
+    <div className={`relative w-full rounded-xl border border-border bg-card overflow-hidden flex ${
+      compact ? "flex-col" : ""
+    }`}>
+      <Link
+        href={`/recipe/${entry.recipeId}`}
+        className={`shrink-0 bg-muted block ${
+          compact ? "w-full aspect-[4/3] overflow-hidden" : "w-20 h-20"
+        }`}
+      >
+        {entry.recipeImage ? (
+          <img
+            src={entry.recipeImage}
+            alt={entry.recipeTitle}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <Drumstick className="h-6 w-6" />
+          </div>
+        )}
+      </Link>
+
+      <Link
+        href={`/recipe/${entry.recipeId}`}
+        className="flex-1 min-w-0 p-2.5 flex flex-col justify-center"
+      >
+        <p className={`font-semibold text-card-foreground leading-tight line-clamp-2 pr-6 ${
+          compact ? "text-xs" : "text-sm"
+        }`}>
+          {entry.recipeTitle}
+        </p>
+        <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+          <span className="flex items-center gap-0.5">
+            <Flame className="h-3 w-3" />
+            {perPortion.kcal} kcal
+          </span>
+          <span>{perPortion.protein}g protein</span>
+        </p>
+      </Link>
+
       <button
-        onClick={onRemove}
-        className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted transition-colors"
+        onClick={(e) => {
+          e.preventDefault()
+          onRemove()
+        }}
+        className="absolute top-1.5 right-1.5 p-1 rounded-full bg-card/80 hover:bg-muted transition-colors"
         aria-label={`Remove ${entry.recipeTitle}`}
       >
         <X className="h-3.5 w-3.5 text-muted-foreground" />
       </button>
-      <p className="text-sm font-medium text-foreground pr-6 leading-tight">
-        {entry.recipeTitle}
-      </p>
-      <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-        <span className="flex items-center gap-0.5">
-          <Flame className="h-3 w-3" />
-          {perPortion.kcal} kcal
-        </span>
-        <span>{perPortion.protein}g protein</span>
-      </p>
     </div>
   )
 }
@@ -112,15 +147,17 @@ function MealSlotCell({
   entry,
   onAdd,
   onRemove,
+  compact = false,
 }: {
   date: Date
   mealType: MealType
   entry?: MealPlanEntry
   onAdd: () => void
   onRemove: (id: string) => void
+  compact?: boolean
 }) {
   return entry ? (
-    <FilledSlot entry={entry} onRemove={() => onRemove(entry.id)} />
+    <FilledSlot entry={entry} onRemove={() => onRemove(entry.id)} compact={compact} />
   ) : (
     <EmptySlot mealType={mealType} onClick={onAdd} />
   )
@@ -309,6 +346,7 @@ function DesktopWeekGrid({
                 entry={entry}
                 onAdd={() => onSlotClick({ dayIndex: i, mealType: meal })}
                 onRemove={onRemove}
+                compact
               />
             </div>
           )
@@ -377,12 +415,12 @@ export function MealPlannerPage() {
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 py-3">
+        <div className="max-w-7xl mx-auto px-4 py-3">
           <h1 className="text-xl font-bold text-foreground">Meal Planner</h1>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto py-4 lg:px-4">
+      <main className="max-w-7xl mx-auto py-4 lg:px-4">
         <div className="lg:hidden">
           <MobileDayView
             dates={dates}
@@ -412,6 +450,7 @@ export function MealPlannerPage() {
           setActiveSlot(null)
         }}
         onSelect={handleRecipePicked}
+        plannedRecipeIds={entries.map((e) => e.recipeId)}
       />
     </div>
   )

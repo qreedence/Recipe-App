@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Flame, Drumstick } from "lucide-react"
+import { Flame, Drumstick, Check } from "lucide-react"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -23,27 +24,39 @@ interface RecipePickerModalProps {
   open: boolean
   onClose: () => void
   onSelect: (recipe: PickedRecipe) => void
+  plannedRecipeIds?: string[]
 }
 
 export function RecipePickerModal({
   open,
   onClose,
   onSelect,
+  plannedRecipeIds = [],
 }: RecipePickerModalProps) {
   const { recipes, isLoading } = useRecipes()
   const [search, setSearch] = useState("")
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return recipes
+   let result = recipes
 
-    const q = search.toLowerCase()
-    return recipes.filter(
-      (r) =>
-        r.title.toLowerCase().includes(q) ||
-        r.ingredients.some((i) => i.name.toLowerCase().includes(q)) ||
-        r.tags.some((t) => t.toLowerCase().includes(q))
-    )
-  }, [recipes, search])
+   if (search.trim()) {
+     const q = search.toLowerCase()
+     result = result.filter(
+       (r) =>
+         r.title.toLowerCase().includes(q) ||
+         r.ingredients.some((i) => i.name.toLowerCase().includes(q)) ||
+         r.tags.some((t) => t.toLowerCase().includes(q))
+     )
+   }
+
+   if (!search.trim() && plannedRecipeIds.length > 0) {
+     const planned = result.filter((r) => plannedRecipeIds.includes(r.id))
+     const rest = result.filter((r) => !plannedRecipeIds.includes(r.id))
+     return [...planned, ...rest]
+   }
+
+   return result
+ }, [recipes, search, plannedRecipeIds])
 
   function handleSelect(recipe: (typeof recipes)[number]) {
     onSelect({
@@ -68,6 +81,9 @@ export function RecipePickerModal({
       <DialogContent className="sm:max-w-md p-0 gap-0">
         <DialogHeader className="px-4 pt-4 pb-3">
           <DialogTitle className="text-base">Choose a recipe</DialogTitle>
+             <DialogDescription className="sr-only">
+              Search and select a recipe to add to your meal plan
+            </DialogDescription>
         </DialogHeader>
 
         {/* Search */}
@@ -106,7 +122,9 @@ export function RecipePickerModal({
                   <li key={recipe.id}>
                     <button
                       onClick={() => handleSelect(recipe)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors duration-100 text-left"
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors duration-100 text-left ${
+                        plannedRecipeIds.includes(recipe.id) ? "bg-primary/5" : ""
+                        }`}
                       role="option"
                     >
                       {/* Thumbnail or placeholder */}
@@ -126,7 +144,6 @@ export function RecipePickerModal({
                         <p className="text-sm font-medium text-foreground truncate">
                           {recipe.title}
                         </p>
-                        {/* ── Delete this block if macros feel noisy ── */}
                         <p className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
                           <span className="flex items-center gap-0.5">
                             <Flame className="h-3 w-3" />
@@ -134,8 +151,12 @@ export function RecipePickerModal({
                           </span>
                           <span>{perPortion.protein}g protein</span>
                         </p>
-                        {/* ── End deletable macros block ── */}
                       </div>
+                      {plannedRecipeIds.includes(recipe.id) && (
+                       <div className="shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                         <Check className="h-3 w-3 text-primary" />
+                       </div>
+                     )}
                     </button>
                   </li>
                 )
