@@ -373,28 +373,32 @@ function DesktopWeekGrid({
         )
       })}
 
-      {ALL_MEAL_TYPES.map((meal) =>
-        dates.map((date, i) => {
-          if (!getEnabledTypes(i).includes(meal)) return <div key={`${meal}-${i}`} />
-          const dateStr = toDateString(date)
-          const entry = entries.find((e) => e.date === dateStr && e.mealType === meal)
-          return (
-            <div key={`${meal}-${i}`}>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
-                {meal}
-              </p>
-              <MealSlotCell
-                date={date}
-                mealType={meal}
-                entry={entry}
-                onAdd={() => onSlotClick({ dayIndex: i, mealType: meal })}
-                onRemove={onRemove}
-                compact
-              />
-            </div>
-          )
-        }),
-      )}
+      {dates.map((date, i) => {
+        const dateStr = toDateString(date)
+        const enabled = getEnabledTypes(i)
+        return (
+          <div key={`col-${i}`} className="flex flex-col gap-3">
+            {enabled.map((meal) => {
+              const entry = entries.find((e) => e.date === dateStr && e.mealType === meal)
+              return (
+                <div key={meal}>
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+                    {meal}
+                  </p>
+                  <MealSlotCell
+                    date={date}
+                    mealType={meal}
+                    entry={entry}
+                    onAdd={() => onSlotClick({ dayIndex: i, mealType: meal })}
+                    onRemove={onRemove}
+                    compact
+                  />
+                </div>
+              )
+            })}
+          </div>
+        )
+      })}
     </div>
   )
 }
