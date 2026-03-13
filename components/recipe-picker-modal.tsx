@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState, useMemo } from "react"
-import { Flame, Drumstick, Check } from "lucide-react"
+import { useState, useMemo } from 'react'
+import { Flame, Drumstick, Check } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { SearchBar } from "@/components/search-bar"
-import { useRecipes } from "@/hooks/use-recipes"
-import type { Macros } from "@/lib/types"
+} from '@/components/ui/dialog'
+import { SearchBar } from '@/components/search-bar'
+import { useRecipes } from '@/hooks/use-recipes'
+import type { Macros } from '@/lib/types'
 
 export interface PickedRecipe {
   id: string
@@ -34,44 +34,51 @@ export function RecipePickerModal({
   plannedRecipeIds = [],
 }: RecipePickerModalProps) {
   const { recipes, isLoading } = useRecipes()
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
-   let result = recipes
+    let result = recipes
 
-   if (search.trim()) {
-     const q = search.toLowerCase()
-     result = result.filter(
-       (r) =>
-         r.title.toLowerCase().includes(q) ||
-         r.ingredients.some((i) => i.name.toLowerCase().includes(q)) ||
-         r.tags.some((t) => t.toLowerCase().includes(q))
-     )
-   }
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.ingredients.some((i) => i.name.toLowerCase().includes(q)) ||
+          r.tags.some((t) => t.toLowerCase().includes(q)),
+      )
+    }
 
-   if (!search.trim() && plannedRecipeIds.length > 0) {
-     const planned = result.filter((r) => plannedRecipeIds.includes(r.id))
-     const rest = result.filter((r) => !plannedRecipeIds.includes(r.id))
-     return [...planned, ...rest]
-   }
+    if (!search.trim() && plannedRecipeIds.length > 0) {
+      const planned = result.filter((r) => plannedRecipeIds.includes(r.id))
+      const rest = result.filter((r) => !plannedRecipeIds.includes(r.id))
+      return [...planned, ...rest]
+    }
 
-   return result
- }, [recipes, search, plannedRecipeIds])
+    return result
+  }, [recipes, search, plannedRecipeIds])
 
   function handleSelect(recipe: (typeof recipes)[number]) {
+    const portions = recipe.portions > 0 ? recipe.portions : 1
+
     onSelect({
       id: recipe.id,
       title: recipe.title,
-      macros: recipe.macros,
+      macros: {
+        kcal: recipe.macros.kcal / portions,
+        carbs: recipe.macros.carbs / portions,
+        fat: recipe.macros.fat / portions,
+        protein: recipe.macros.protein / portions,
+      },
       image: recipe.image,
     })
-    setSearch("")
+    setSearch('')
     onClose()
   }
 
   function handleOpenChange(isOpen: boolean) {
     if (!isOpen) {
-      setSearch("")
+      setSearch('')
       onClose()
     }
   }
@@ -81,9 +88,9 @@ export function RecipePickerModal({
       <DialogContent className="sm:max-w-md p-0 gap-0">
         <DialogHeader className="px-4 pt-4 pb-3">
           <DialogTitle className="text-base">Choose a recipe</DialogTitle>
-             <DialogDescription className="sr-only">
-              Search and select a recipe to add to your meal plan
-            </DialogDescription>
+          <DialogDescription className="sr-only">
+            Search and select a recipe to add to your meal plan
+          </DialogDescription>
         </DialogHeader>
 
         {/* Search */}
@@ -100,22 +107,17 @@ export function RecipePickerModal({
               </div>
               <p className="text-sm text-muted-foreground">
                 {recipes.length === 0
-                  ? "No recipes yet — create one first!"
-                  : "No recipes match your search"}
+                  ? 'No recipes yet — create one first!'
+                  : 'No recipes match your search'}
               </p>
             </div>
           ) : (
             <ul role="listbox" className="px-2">
               {filtered.map((recipe) => {
                 const perPortion = {
-                  kcal:
-                    recipe.portions > 0
-                      ? Math.round(recipe.macros.kcal / recipe.portions)
-                      : 0,
+                  kcal: recipe.portions > 0 ? Math.round(recipe.macros.kcal / recipe.portions) : 0,
                   protein:
-                    recipe.portions > 0
-                      ? Math.round(recipe.macros.protein / recipe.portions)
-                      : 0,
+                    recipe.portions > 0 ? Math.round(recipe.macros.protein / recipe.portions) : 0,
                 }
 
                 return (
@@ -123,18 +125,14 @@ export function RecipePickerModal({
                     <button
                       onClick={() => handleSelect(recipe)}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors duration-100 text-left ${
-                        plannedRecipeIds.includes(recipe.id) ? "bg-primary/5" : ""
-                        }`}
+                        plannedRecipeIds.includes(recipe.id) ? 'bg-primary/5' : ''
+                      }`}
                       role="option"
                     >
                       {/* Thumbnail or placeholder */}
                       <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                         {recipe.image ? (
-                          <img
-                            src={recipe.image}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={recipe.image} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <Drumstick className="h-4 w-4 text-muted-foreground" />
                         )}
@@ -153,10 +151,10 @@ export function RecipePickerModal({
                         </p>
                       </div>
                       {plannedRecipeIds.includes(recipe.id) && (
-                       <div className="shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                         <Check className="h-3 w-3 text-primary" />
-                       </div>
-                     )}
+                        <div className="shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Check className="h-3 w-3 text-primary" />
+                        </div>
+                      )}
                     </button>
                   </li>
                 )
