@@ -1,11 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, FlaskConical, Flame } from 'lucide-react'
+import { Plus, Trash2, FlaskConical, Flame, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Ingredient, Macros, EMPTY_MACROS } from '@/lib/types'
 import { MacroModal } from './macro-modal'
+import { useIsMobile } from '@/hooks/use-mobile'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface StepIngredientsProps {
   title: string
@@ -26,6 +36,7 @@ export function StepIngredients({
 }: StepIngredientsProps) {
   const [macroModalIndex, setMacroModalIndex] = useState<number | null>(null)
   const [customUnitIndexes, setCustomUnitIndexes] = useState<Set<number>>(new Set())
+  const isMobile = useIsMobile()
 
   function addIngredient() {
     setIngredients([
@@ -140,7 +151,7 @@ export function StepIngredients({
                       <X className="h-3 w-3" />
                     </button>
                   </div>
-                ) : (
+                ) : isMobile ? (
                   <select
                     value={ing.unit}
                     onChange={(e) => {
@@ -181,6 +192,54 @@ export function StepIngredients({
                     </optgroup>
                     <option value="__custom">Custom...</option>
                   </select>
+                ) : (
+                  <Select
+                    value={ing.unit || undefined}
+                    onValueChange={(val) => {
+                      if (val === '__custom') {
+                        updateField(i, 'unit', '')
+                        setCustomUnitIndexes((prev) => new Set(prev).add(i))
+                      } else {
+                        updateField(i, 'unit', val)
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-24 shrink-0">
+                      <SelectValue placeholder="Unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Weight</SelectLabel>
+                        <SelectItem value="g">g</SelectItem>
+                        <SelectItem value="kg">kg</SelectItem>
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Volume</SelectLabel>
+                        <SelectItem value="ml">ml</SelectItem>
+                        <SelectItem value="dl">dl</SelectItem>
+                        <SelectItem value="l">l</SelectItem>
+                        <SelectItem value="tsp">tsp</SelectItem>
+                        <SelectItem value="tbsp">tbsp</SelectItem>
+                        <SelectItem value="cup">cup</SelectItem>
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Count</SelectLabel>
+                        <SelectItem value="st">st</SelectItem>
+                        <SelectItem value="cloves">cloves</SelectItem>
+                        <SelectItem value="slices">slices</SelectItem>
+                        <SelectItem value="pieces">pieces</SelectItem>
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Other</SelectLabel>
+                        <SelectItem value="pinch">pinch</SelectItem>
+                        <SelectItem value="bunch">bunch</SelectItem>
+                        <SelectItem value="can">can</SelectItem>
+                        <SelectItem value="package">package</SelectItem>
+                        <SelectItem value="bag">bag</SelectItem>
+                      </SelectGroup>
+                      <SelectItem value="__custom">Custom...</SelectItem>
+                    </SelectContent>
+                  </Select>
                 )}
                 <Input
                   value={ing.name}
