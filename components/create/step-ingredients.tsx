@@ -25,6 +25,7 @@ export function StepIngredients({
   setIngredients,
 }: StepIngredientsProps) {
   const [macroModalIndex, setMacroModalIndex] = useState<number | null>(null)
+  const [customUnitIndexes, setCustomUnitIndexes] = useState<Set<number>>(new Set())
 
   function addIngredient() {
     setIngredients([
@@ -115,39 +116,72 @@ export function StepIngredients({
                   className="w-20 shrink-0"
                   step="any"
                 />
-                <select
-                  value={ing.unit}
-                  onChange={(e) => updateField(i, 'unit', e.target.value)}
-                  className="h-9 rounded-md border border-border bg-background px-2 text-sm shrink-0 w-24"
-                >
-                  <option value="">Unit</option>
-                  <optgroup label="Weight">
-                    <option value="g">g</option>
-                    <option value="kg">kg</option>
-                  </optgroup>
-                  <optgroup label="Volume">
-                    <option value="ml">ml</option>
-                    <option value="dl">dl</option>
-                    <option value="l">l</option>
-                    <option value="tsp">tsp</option>
-                    <option value="tbsp">tbsp</option>
-                    <option value="cup">cup</option>
-                  </optgroup>
-                  <optgroup label="Count">
-                    <option value="st">st</option>
-                    <option value="cloves">cloves</option>
-                    <option value="slices">slices</option>
-                    <option value="pieces">pieces</option>
-                  </optgroup>
-                  <optgroup label="Other">
-                    <option value="pinch">pinch</option>
-                    <option value="bunch">bunch</option>
-                    <option value="can">can</option>
-                    <option value="package">package</option>
-                    <option value="bag">bag</option>
-                  </optgroup>
-                  <option value="__custom">Custom...</option>
-                </select>
+                {customUnitIndexes.has(i) ? (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Input
+                      value={ing.unit}
+                      onChange={(e) => updateField(i, 'unit', e.target.value)}
+                      placeholder="Unit"
+                      className="w-20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateField(i, 'unit', '')
+                        setCustomUnitIndexes((prev) => {
+                          const next = new Set(prev)
+                          next.delete(i)
+                          return next
+                        })
+                      }}
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Back to unit list"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={ing.unit}
+                    onChange={(e) => {
+                      if (e.target.value === '__custom') {
+                        updateField(i, 'unit', '')
+                        setCustomUnitIndexes((prev) => new Set(prev).add(i))
+                      } else {
+                        updateField(i, 'unit', e.target.value)
+                      }
+                    }}
+                    className="h-9 rounded-md border border-border bg-background px-2 text-sm shrink-0 w-24"
+                  >
+                    <option value="">Unit</option>
+                    <optgroup label="Weight">
+                      <option value="g">g</option>
+                      <option value="kg">kg</option>
+                    </optgroup>
+                    <optgroup label="Volume">
+                      <option value="ml">ml</option>
+                      <option value="dl">dl</option>
+                      <option value="l">l</option>
+                      <option value="tsp">tsp</option>
+                      <option value="tbsp">tbsp</option>
+                      <option value="cup">cup</option>
+                    </optgroup>
+                    <optgroup label="Count">
+                      <option value="st">st</option>
+                      <option value="cloves">cloves</option>
+                      <option value="slices">slices</option>
+                      <option value="pieces">pieces</option>
+                    </optgroup>
+                    <optgroup label="Other">
+                      <option value="pinch">pinch</option>
+                      <option value="bunch">bunch</option>
+                      <option value="can">can</option>
+                      <option value="package">package</option>
+                      <option value="bag">bag</option>
+                    </optgroup>
+                    <option value="__custom">Custom...</option>
+                  </select>
+                )}
                 <Input
                   value={ing.name}
                   onChange={(e) => updateField(i, 'name', e.target.value)}
