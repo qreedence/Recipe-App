@@ -1,25 +1,25 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, ArrowRight, Check } from "lucide-react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Recipe, Ingredient, Macros, EMPTY_MACROS } from "@/lib/types"
-import { saveRecipeAndRevalidate } from "@/hooks/use-recipes"
-import { StepIngredients } from "./step-ingredients"
-import { StepInstructions } from "./step-instructions"
-import { StepImage } from "./step-image"
-import { StepMacros } from "./step-macros"
-import { StepTags } from "./step-tags"
-import { useUnsavedChanges } from "@/hooks/use-unsaved-changes"
-import { UnsavedChangesDialog } from "../unsaved-changes-dialog"
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Recipe, Ingredient, Macros, EMPTY_MACROS } from '@/lib/types'
+import { saveRecipeAndRevalidate } from '@/hooks/use-recipes'
+import { StepIngredients } from './step-ingredients'
+import { StepInstructions } from './step-instructions'
+import { StepImage } from './step-image'
+import { StepMacros } from './step-macros'
+import { StepTags } from './step-tags'
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes'
+import { UnsavedChangesDialog } from '../unsaved-changes-dialog'
 
-const STEP_LABELS = ["Ingredients", "Instructions", "Image", "Macros", "Tags"]
+const STEP_LABELS = ['Ingredients', 'Instructions', 'Image', 'Macros', 'Tags']
 
 interface RecipeFormProps {
-  mode: "create" | "edit"
+  mode: 'create' | 'edit'
   initialData?: Recipe
 }
 
@@ -27,35 +27,27 @@ export function RecipeForm({ mode, initialData }: RecipeFormProps) {
   const router = useRouter()
   const [step, setStep] = useState(0)
 
-  const isEdit = mode === "edit"
+  const isEdit = mode === 'edit'
 
   // Step 1
-  const [title, setTitle] = useState(initialData?.title ?? "")
+  const [title, setTitle] = useState(initialData?.title ?? '')
   const [portions, setPortions] = useState(initialData?.portions ?? 1)
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     initialData?.ingredients.length
       ? initialData.ingredients
-      : [{ id: crypto.randomUUID(), name: "", amount: "", macros: null }]
+      : [{ id: crypto.randomUUID(), name: '', quantity: null, unit: '', macros: null }],
   )
 
   // Step 2
-  const [steps, setSteps] = useState<string[]>(
-    initialData?.steps.length ? initialData.steps : [""]
-  )
+  const [steps, setSteps] = useState<string[]>(initialData?.steps.length ? initialData.steps : [''])
 
   // Step 3
-  const [image, setImage] = useState<string | null>(
-    initialData?.image ?? null
-  )
+  const [image, setImage] = useState<string | null>(initialData?.image ?? null)
 
   // Step 4
-  const [macroMode, setMacroMode] = useState<"auto" | "manual">(
-    initialData?.macroMode ?? "auto"
-  )
+  const [macroMode, setMacroMode] = useState<'auto' | 'manual'>(initialData?.macroMode ?? 'auto')
   const [manualMacros, setManualMacros] = useState<Macros>(
-    initialData?.macroMode === "manual"
-      ? { ...initialData.macros }
-      : { ...EMPTY_MACROS }
+    initialData?.macroMode === 'manual' ? { ...initialData.macros } : { ...EMPTY_MACROS },
   )
 
   // Step 5
@@ -72,28 +64,25 @@ export function RecipeForm({ mode, initialData }: RecipeFormProps) {
           protein: acc.protein + ing.macros.protein,
         }
       },
-      { ...EMPTY_MACROS }
+      { ...EMPTY_MACROS },
     )
   }
 
   const isDirty =
-  title !== (initialData?.title ?? "") ||
-  portions !== (initialData?.portions ?? 1) ||
-  image !== (initialData?.image ?? null) ||
-  tags.length !== (initialData?.tags ?? []).length ||
-  steps.some((s, i) => s !== (initialData?.steps?.[i] ?? "")) ||
-  steps.length !== (initialData?.steps?.length ?? 1) ||
-  ingredients.some(
-    (ing, i) => ing.name !== (initialData?.ingredients?.[i]?.name ?? "")
-  ) ||
-  ingredients.length !== (initialData?.ingredients?.length ?? 1)
+    title !== (initialData?.title ?? '') ||
+    portions !== (initialData?.portions ?? 1) ||
+    image !== (initialData?.image ?? null) ||
+    tags.length !== (initialData?.tags ?? []).length ||
+    steps.some((s, i) => s !== (initialData?.steps?.[i] ?? '')) ||
+    steps.length !== (initialData?.steps?.length ?? 1) ||
+    ingredients.some((ing, i) => ing.name !== (initialData?.ingredients?.[i]?.name ?? '')) ||
+    ingredients.length !== (initialData?.ingredients?.length ?? 1)
 
-const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
-  useUnsavedChanges(isDirty)
+  const { showDialog, guardNavigation, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty)
 
   async function handleSave() {
     if (!title.trim()) {
-      toast.error("Please enter a recipe title")
+      toast.error('Please enter a recipe title')
       setStep(0)
       return
     }
@@ -105,7 +94,7 @@ const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
       ingredients: ingredients.filter((i) => i.name.trim()),
       steps: steps.filter((s) => s.trim()),
       image,
-      macros: macroMode === "auto" ? calcAutoMacros() : manualMacros,
+      macros: macroMode === 'auto' ? calcAutoMacros() : manualMacros,
       macroMode,
       tags,
       rating: initialData?.rating ?? null,
@@ -114,8 +103,8 @@ const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
     }
 
     await saveRecipeAndRevalidate(recipe)
-    toast.success(isEdit ? "Recipe updated!" : "Recipe saved!")
-    router.push(isEdit ? `/recipe/${recipe.id}` : "/")
+    toast.success(isEdit ? 'Recipe updated!' : 'Recipe saved!')
+    router.push(isEdit ? `/recipe/${recipe.id}` : '/')
   }
 
   const totalSteps = STEP_LABELS.length
@@ -126,16 +115,14 @@ const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-           <button
-              onClick={() =>
-                guardNavigation(isEdit ? `/recipe/${initialData!.id}` : "/")
-              }
+            <button
+              onClick={() => guardNavigation(isEdit ? `/recipe/${initialData!.id}` : '/')}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Cancel
-          </button>
+            </button>
             <h1 className="text-sm font-semibold text-foreground">
-              {isEdit ? "Edit Recipe" : "New Recipe"}
+              {isEdit ? 'Edit Recipe' : 'New Recipe'}
             </h1>
             <div className="w-12" />
           </div>
@@ -150,14 +137,12 @@ const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
               >
                 <div
                   className={`h-1 rounded-full transition-colors duration-200 ${
-                    i <= step ? "bg-primary" : "bg-border"
+                    i <= step ? 'bg-primary' : 'bg-border'
                   }`}
                 />
                 <span
                   className={`text-[10px] mt-1 block text-center transition-colors ${
-                    i === step
-                      ? "text-primary font-medium"
-                      : "text-muted-foreground"
+                    i === step ? 'text-primary font-medium' : 'text-muted-foreground'
                   }`}
                 >
                   {label}
@@ -197,11 +182,7 @@ const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
       <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-30">
         <div className="max-w-2xl mx-auto px-4 py-3 flex gap-3 lg:pl-60">
           {step > 0 && (
-            <Button
-              variant="outline"
-              onClick={() => setStep(step - 1)}
-              className="flex-1"
-            >
+            <Button variant="outline" onClick={() => setStep(step - 1)} className="flex-1">
               <ArrowLeft className="h-4 w-4 mr-1.5" />
               Back
             </Button>
@@ -209,7 +190,7 @@ const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
           {isLast ? (
             <Button onClick={handleSave} className="flex-1">
               <Check className="h-4 w-4 mr-1.5" />
-              {isEdit ? "Update Recipe" : "Save Recipe"}
+              {isEdit ? 'Update Recipe' : 'Save Recipe'}
             </Button>
           ) : (
             <Button onClick={() => setStep(step + 1)} className="flex-1">
@@ -219,11 +200,7 @@ const { showDialog, guardNavigation, confirmLeave, cancelLeave } =
           )}
         </div>
       </div>
-      <UnsavedChangesDialog
-        open={showDialog}
-        onConfirm={confirmLeave}
-        onCancel={cancelLeave}
-      />
+      <UnsavedChangesDialog open={showDialog} onConfirm={confirmLeave} onCancel={cancelLeave} />
     </div>
   )
 }
