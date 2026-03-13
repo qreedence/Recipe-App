@@ -5,11 +5,40 @@ export interface Macros {
   protein: number
 }
 
+// The predefined units, grouped for the dropdown later
+export const INGREDIENT_UNITS = [
+  // Weight
+  'g',
+  'kg',
+  // Volume
+  'ml',
+  'dl',
+  'l',
+  'tsp',
+  'tbsp',
+  'cup',
+  // Count
+  'st',
+  'cloves',
+  'slices',
+  'pieces',
+  // Other
+  'pinch',
+  'bunch',
+  'can',
+  'package',
+  'bag',
+] as const
+
+export type IngredientUnit = (typeof INGREDIENT_UNITS)[number]
+
 export interface Ingredient {
   id: string
   name: string
-  amount: string
+  quantity: number | null
+  unit: string // IngredientUnit or freeform
   macros: Macros | null
+  originalAmount?: string // migration artifact
 }
 
 export interface Recipe {
