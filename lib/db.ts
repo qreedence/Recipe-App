@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import { MealPlanEntry, MealTypeConfig, Recipe, ShoppingItem } from './types'
+import { MealPlanEntry, MealTypeConfig, Recipe, RecipeDraft, ShoppingItem } from './types'
 import { parseAmount } from './parse-amount'
 
 const db = new Dexie('recipebook') as Dexie & {
@@ -7,6 +7,7 @@ const db = new Dexie('recipebook') as Dexie & {
   shoppingItems: EntityTable<ShoppingItem, 'id'>
   mealPlanEntries: EntityTable<MealPlanEntry, 'id'>
   mealTypeConfig: EntityTable<MealTypeConfig, 'id'>
+  recipeDrafts: EntityTable<RecipeDraft, 'id'>
 }
 
 db.version(1).stores({
@@ -43,5 +44,9 @@ db.version(4)
       })
     })
   })
+
+db.version(5).stores({
+  recipeDrafts: 'id',
+})
 
 export { db }

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Recipe, Ingredient, Macros, EMPTY_MACROS } from '@/lib/types'
+import { Recipe, Ingredient, Macros, EMPTY_MACROS, RecipeDraft } from '@/lib/types'
 import { saveRecipeAndRevalidate } from '@/hooks/use-recipes'
 import { StepIngredients } from './step-ingredients'
 import { StepInstructions } from './step-instructions'
@@ -15,43 +15,86 @@ import { StepMacros } from './step-macros'
 import { StepTags } from './step-tags'
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes'
 import { UnsavedChangesDialog } from '../unsaved-changes-dialog'
+import { useDraftAutosave } from '@/hooks/use-draft-autosave'
 
 const STEP_LABELS = ['Ingredients', 'Instructions', 'Image', 'Macros', 'Tags']
 
 interface RecipeFormProps {
   mode: 'create' | 'edit'
   initialData?: Recipe
+  initialDraft?: RecipeDraft | null
+  onPersistDraft: (formState: Omit<RecipeDraft, 'id' | 'updatedAt'>) => void
+  onClearDraft: () => void
 }
 
-export function RecipeForm({ mode, initialData }: RecipeFormProps) {
+export function RecipeForm({
+  mode,
+  initialData,
+  initialDraft,
+  onPersistDraft,
+  onClearDraft,
+}: RecipeFormProps) {
   const router = useRouter()
   const [step, setStep] = useState(0)
 
   const isEdit = mode === 'edit'
 
   // Step 1
-  const [title, setTitle] = useState(initialData?.title ?? '')
-  const [portions, setPortions] = useState(initialData?.portions ?? 1)
+  const [title, setTitle] = useState(initialDraft?.title ?? initialData?.title ?? '')
+  const [portions, setPortions] = useState(initialDraft?.portions ?? initialData?.portions ?? 1)
   const [ingredients, setIngredients] = useState<Ingredient[]>(
-    initialData?.ingredients.length
-      ? initialData.ingredients
-      : [{ id: crypto.randomUUID(), name: '', quantity: null, unit: '', macros: null }],
+    initialDraft?.ingredients ??
+      (initialData?.ingredients.length
+        ? initialData.ingredients
+        : [{ id: crypto.randomUUID(), name: '', quantity: null, unit: '', macros: null }]),
+  )
+  // Step 2
+  const [steps, setSteps] = useState<string[]>(
+    initialDraft?.steps ?? (initialData?.steps.length ? initialData.steps : ['']),
   )
 
-  // Step 2
-  const [steps, setSteps] = useState<string[]>(initialData?.steps.length ? initialData.steps : [''])
-
   // Step 3
-  const [image, setImage] = useState<string | null>(initialData?.image ?? null)
+  const [image, setImage] = useState<string | null>(
+    initialDraft?.image ?? initialData?.image ?? null,
+  )
 
   // Step 4
-  const [macroMode, setMacroMode] = useState<'auto' | 'manual'>(initialData?.macroMode ?? 'auto')
+  const [macroMode, setMacroMode] = useState<'auto' | 'manual'>(
+    initialDraft?.macroMode ?? initialData?.macroMode ?? 'auto',
+  )
   const [manualMacros, setManualMacros] = useState<Macros>(
-    initialData?.macroMode === 'manual' ? { ...initialData.macros } : { ...EMPTY_MACROS },
+    initialDraft?.manualMacros ??
+      (initialData?.macroMode === 'manual' ? { ...initialData.macros } : { ...EMPTY_MACROS }),
   )
 
   // Step 5
-  const [tags, setTags] = useState<string[]>(initialData?.tags ?? [])
+  const [tags, setTags] = useState<string[]>(initialDraft?.tags ?? initialData?.tags ?? [])
+
+  // Auto-persist draft on changes
+  useEffect(() => {
+    onPersistDraft({
+      step,
+      title,
+      portions,
+      ingredients,
+      steps,
+      image,
+      macroMode,
+      manualMacros,
+      tags,
+    })
+  }, [
+    step,
+    title,
+    portions,
+    ingredients,
+    steps,
+    image,
+    macroMode,
+    manualMacros,
+    tags,
+    onPersistDraft,
+  ])
 
   function calcAutoMacros(): Macros {
     return ingredients.reduce(
@@ -80,6 +123,11 @@ export function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
   const { showDialog, guardNavigation, confirmLeave, cancelLeave } = useUnsavedChanges(isDirty)
 
+  function handleDiscardAndLeave() {
+    onClearDraft()
+    confirmLeave()
+  }
+
   async function handleSave() {
     if (!title.trim()) {
       toast.error('Please enter a recipe title')
@@ -104,6 +152,7 @@ export function RecipeForm({ mode, initialData }: RecipeFormProps) {
 
     await saveRecipeAndRevalidate(recipe)
     toast.success(isEdit ? 'Recipe updated!' : 'Recipe saved!')
+    onClearDraft()
     router.push(isEdit ? `/recipe/${recipe.id}` : '/')
   }
 
@@ -200,7 +249,12 @@ export function RecipeForm({ mode, initialData }: RecipeFormProps) {
           )}
         </div>
       </div>
-      <UnsavedChangesDialog open={showDialog} onConfirm={confirmLeave} onCancel={cancelLeave} />
+      <UnsavedChangesDialog
+        open={showDialog}
+        onConfirm={handleDiscardAndLeave}
+        onCancel={cancelLeave}
+        onSaveDraft={confirmLeave}
+      />
     </div>
   )
 }

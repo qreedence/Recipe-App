@@ -1,8 +1,9 @@
-"use client"
+'use client'
 
-import { use } from "react"
-import { useRecipe } from "@/hooks/use-recipes"
-import { RecipeForm } from "@/components/create/recipe-form"
+import { use } from 'react'
+import { useRecipe } from '@/hooks/use-recipes'
+import { RecipeForm } from '@/components/create/recipe-form'
+import { useDraftAutosave } from '@/hooks/use-draft-autosave'
 
 interface EditPageProps {
   params: Promise<{ id: string }>
@@ -11,6 +12,7 @@ interface EditPageProps {
 export default function EditPage({ params }: EditPageProps) {
   const { id } = use(params)
   const { recipe, isLoading } = useRecipe(id)
+  const { loadedDraft, isLoaded, persistDraft, clearDraft } = useDraftAutosave(id)
 
   if (isLoading) return null
 
@@ -22,5 +24,13 @@ export default function EditPage({ params }: EditPageProps) {
     )
   }
 
-  return <RecipeForm mode="edit" initialData={recipe} />
+  return (
+    <RecipeForm
+      mode="edit"
+      initialData={recipe}
+      initialDraft={loadedDraft}
+      onPersistDraft={persistDraft}
+      onClearDraft={clearDraft}
+    />
+  )
 }

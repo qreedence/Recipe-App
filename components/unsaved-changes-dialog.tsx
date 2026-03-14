@@ -15,9 +15,15 @@ interface UnsavedChangesDialogProps {
   open: boolean
   onConfirm: () => void
   onCancel: () => void
+  onSaveDraft?: () => void
 }
 
-export function UnsavedChangesDialog({ open, onConfirm, onCancel }: UnsavedChangesDialogProps) {
+export function UnsavedChangesDialog({
+  open,
+  onConfirm,
+  onCancel,
+  onSaveDraft,
+}: UnsavedChangesDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={(v) => !v && onCancel()}>
       <AlertDialogContent>
@@ -27,11 +33,21 @@ export function UnsavedChangesDialog({ open, onConfirm, onCancel }: UnsavedChang
             If you leave now, your progress will be lost. Are you sure?
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="flex-row justify-center items-center sm:justify-center">
-          <AlertDialogCancel onClick={onCancel}>Keep editing</AlertDialogCancel>
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+          <AlertDialogCancel onClick={onCancel} className="w-full">
+            Keep editing
+          </AlertDialogCancel>
+          {onSaveDraft && (
+            <AlertDialogAction
+              onClick={onSaveDraft}
+              className="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150"
+            >
+              Save draft & leave
+            </AlertDialogAction>
+          )}
           <AlertDialogAction
             onClick={onConfirm}
-            className="px-4 py-2 rounded-md text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors duration-150"
+            className="w-full px-4 py-2 rounded-md text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors duration-150"
           >
             Discard changes
           </AlertDialogAction>

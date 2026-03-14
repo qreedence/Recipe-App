@@ -129,3 +129,17 @@ export interface ShoppingItem {
   recipeTitle: string | null
   createdAt: number
 }
+
+export interface RecipeDraft {
+  id: string // "create" or recipe UUID for edits
+  step: number
+  title: string
+  portions: number
+  ingredients: Ingredient[]
+  steps: string[]
+  image: string | null
+  macroMode: 'auto' | 'manual'
+  manualMacros: Macros
+  tags: string[]
+  updatedAt: number
+}
