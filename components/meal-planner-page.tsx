@@ -38,6 +38,8 @@ import { MealTypeToggle } from './meal-type-toggle'
 import { DailyMacroSummary } from './daily-macro-summary'
 import { AggregatedIngredientsModal } from './aggregated-ingredients-modal'
 import { aggregateIngredients, type AggregatedIngredient } from '@/lib/aggregate-ingredients'
+import { addItemsAndRevalidate } from '@/hooks/use-shopping'
+import { lookupCategory } from '@/lib/category-lookup'
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
@@ -596,6 +598,22 @@ export function MealPlannerPage() {
         onClose={() => setListModalOpen(false)}
         ingredients={aggregated}
         loading={aggregating}
+        onAddToList={async (visible) => {
+          const items = visible.map((ing) => ({
+            id: crypto.randomUUID(),
+            name: ing.name,
+            amount:
+              ing.totalQuantity !== null
+                ? `${ing.totalQuantity}${ing.unit ? ` ${ing.unit}` : ''}`
+                : '',
+            checked: false,
+            category: lookupCategory(ing.name) ?? null,
+            recipeId: null,
+            recipeTitle: null,
+            createdAt: Date.now(),
+          }))
+          await addItemsAndRevalidate(items)
+        }}
       />
       <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
         <AlertDialogContent>
