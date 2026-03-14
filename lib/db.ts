@@ -46,7 +46,7 @@ db.version(4)
   })
 
 db.version(5).stores({
-  recipeDraft: 'id',
+  recipeDrafts: 'id',
 })
 
 export { db }
