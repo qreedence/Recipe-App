@@ -10,6 +10,7 @@ import {
   Drumstick,
   EllipsisVertical,
   Trash2,
+  ShoppingCart,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -35,6 +36,8 @@ import { useMealTypeConfig } from '@/hooks/use-meal-type-config'
 import Link from 'next/link'
 import { MealTypeToggle } from './meal-type-toggle'
 import { DailyMacroSummary } from './daily-macro-summary'
+import { AggregatedIngredientsModal } from './aggregated-ingredients-modal'
+import { aggregateIngredients, type AggregatedIngredient } from '@/lib/aggregate-ingredients'
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
 
@@ -469,6 +472,18 @@ export function MealPlannerPage() {
   const { entries, addEntry, removeEntry, clearWeek } = useMealPlan(weekDateStrings)
   const { getEnabledTypes, setEnabledTypes } = useMealTypeConfig()
 
+  const [listModalOpen, setListModalOpen] = useState(false)
+  const [aggregated, setAggregated] = useState<AggregatedIngredient[]>([])
+  const [aggregating, setAggregating] = useState(false)
+
+  async function handleGenerateList() {
+    setAggregating(true)
+    setListModalOpen(true)
+    const result = await aggregateIngredients(entries)
+    setAggregated(result)
+    setAggregating(false)
+  }
+
   function handleSlotClick(slot: MealSlot) {
     setActiveSlot(slot)
     setPickerOpen(true)
@@ -507,26 +522,36 @@ export function MealPlannerPage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">Meal Planner</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="p-2 rounded-lg hover:bg-accent transition-colors"
-                aria-label="Menu"
-              >
-                <EllipsisVertical className="h-5 w-5 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={entries.length === 0}
-                onSelect={() => setClearDialogOpen(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Clear week
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleGenerateList}
+              disabled={entries.length === 0}
+              className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-30"
+              aria-label="Generate shopping list"
+            >
+              <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-2 rounded-lg hover:bg-accent transition-colors"
+                  aria-label="Menu"
+                >
+                  <EllipsisVertical className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  variant="destructive"
+                  disabled={entries.length === 0}
+                  onSelect={() => setClearDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Clear week
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
@@ -565,6 +590,12 @@ export function MealPlannerPage() {
         }}
         onSelect={handleRecipePicked}
         plannedRecipeIds={entries.map((e) => e.recipeId)}
+      />
+      <AggregatedIngredientsModal
+        open={listModalOpen}
+        onClose={() => setListModalOpen(false)}
+        ingredients={aggregated}
+        loading={aggregating}
       />
       <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
         <AlertDialogContent>
