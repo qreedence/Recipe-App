@@ -106,11 +106,11 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
       {/* Hero image */}
       <div className="relative">
         {recipe.image ? (
-          <div className="aspect-[16/10] sm:aspect-[16/7] bg-muted">
+          <div className="aspect-16/10 sm:aspect-16/7 bg-muted">
             <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
           </div>
         ) : (
-          <div className="aspect-[16/10] sm:aspect-[16/7] bg-muted flex items-center justify-center">
+          <div className="aspect-16/10 sm:aspect-16/7 bg-muted flex items-center justify-center">
             <Drumstick className="h-16 w-16 text-muted-foreground" />
           </div>
         )}
