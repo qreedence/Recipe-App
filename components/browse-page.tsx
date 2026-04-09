@@ -1,24 +1,24 @@
-"use client"
+'use client'
 
-import { useState, useMemo, useRef, useEffect } from "react"
-import Link from "next/link"
-import { Plus, SlidersHorizontal, BookOpen, ArrowUpDown, Check, Heart } from "lucide-react"
-import { useRecipes } from "@/hooks/use-recipes"
-import { SearchBar } from "@/components/search-bar"
-import { FilterChips } from "@/components/filter-chips"
-import { RecipeCard } from "@/components/recipe-card"
-import { SettingsMenu } from "./settings-menu"
-import { InstallButton } from "@/components/install-button"
+import { useState, useMemo, useRef, useEffect } from 'react'
+import Link from 'next/link'
+import { Plus, SlidersHorizontal, BookOpen, ArrowUpDown, Check, Heart } from 'lucide-react'
+import { useRecipes } from '@/hooks/use-recipes'
+import { SearchBar } from '@/components/search-bar'
+import { FilterChips } from '@/components/filter-chips'
+import { RecipeCard } from '@/components/recipe-card'
+import { SettingsMenu } from './settings-menu'
+import { InstallButton } from '@/components/install-button'
 
-type SortOption = "recent" | "rating" | "kcal-asc" | "kcal-desc" | "protein-desc" | "alpha"
+type SortOption = 'recent' | 'rating' | 'kcal-asc' | 'kcal-desc' | 'protein-desc' | 'alpha'
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "recent", label: "Recently Added" },
-  { value: "rating", label: "Highest Rated" },
-  { value: "kcal-asc", label: "Lowest Calories" },
-  { value: "kcal-desc", label: "Highest Calories" },
-  { value: "protein-desc", label: "Most Protein" },
-  { value: "alpha", label: "Alphabetical"}
+  { value: 'recent', label: 'Recently Added' },
+  { value: 'rating', label: 'Highest Rated' },
+  { value: 'kcal-asc', label: 'Lowest Calories' },
+  { value: 'kcal-desc', label: 'Highest Calories' },
+  { value: 'protein-desc', label: 'Most Protein' },
+  { value: 'alpha', label: 'Alphabetical' },
 ]
 
 function SortDropdown({
@@ -38,8 +38,8 @@ function SortDropdown({
       }
     }
     if (open) {
-      document.addEventListener("mousedown", handleClick)
-      return () => document.removeEventListener("mousedown", handleClick)
+      document.addEventListener('mousedown', handleClick)
+      return () => document.removeEventListener('mousedown', handleClick)
     }
   }, [open])
 
@@ -50,9 +50,9 @@ function SortDropdown({
       <button
         onClick={() => setOpen(!open)}
         className={`p-2.5 rounded-lg border transition-colors duration-150 ${
-          value !== "recent"
-            ? "bg-primary text-primary-foreground border-primary"
-            : "bg-card text-foreground border-border hover:bg-accent"
+          value !== 'recent'
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'bg-card text-foreground border-border hover:bg-accent'
         }`}
         aria-label={`Sort by: ${currentLabel}`}
         aria-haspopup="listbox"
@@ -75,16 +75,12 @@ function SortDropdown({
             >
               <span
                 className={
-                  value === opt.value
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground"
+                  value === opt.value ? 'text-foreground font-medium' : 'text-muted-foreground'
                 }
               >
                 {opt.label}
               </span>
-              {value === opt.value && (
-                <Check className="h-4 w-4 text-primary" />
-              )}
+              {value === opt.value && <Check className="h-4 w-4 text-primary" />}
             </button>
           ))}
         </div>
@@ -95,11 +91,11 @@ function SortDropdown({
 
 export function BrowsePage() {
   const { recipes, isLoading } = useRecipes()
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState('')
   const [filterTags, setFilterTags] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
-  const [sort, setSort] = useState<SortOption>("recent")
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [sort, setSort] = useState<SortOption>('recent')
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
 
   const filtered = useMemo(() => {
     let result = recipes
@@ -107,45 +103,43 @@ export function BrowsePage() {
     if (favoritesOnly) {
       result = result.filter((r) => r.isFavorite)
     }
-       
+
     if (search.trim()) {
       const q = search.toLowerCase()
       result = result.filter(
         (r) =>
           r.title.toLowerCase().includes(q) ||
           r.ingredients.some((i) => i.name.toLowerCase().includes(q)) ||
-          r.tags.some((t) => t.toLowerCase().includes(q))
+          r.tags.some((t) => t.toLowerCase().includes(q)),
       )
     }
     if (filterTags.length > 0) {
       result = result.filter((r) =>
-        filterTags.every((tag) =>
-          r.tags.some((t) => t.toLowerCase() === tag.toLowerCase())
-        )
+        filterTags.every((tag) => r.tags.some((t) => t.toLowerCase() === tag.toLowerCase())),
       )
     }
     result = [...result].sort((a, b) => {
       switch (sort) {
-        case "rating":
+        case 'rating':
           return (b.rating ?? 0) - (a.rating ?? 0)
-        case "kcal-asc": {
+        case 'kcal-asc': {
           const aKcal = a.portions > 0 ? a.macros.kcal / a.portions : 0
           const bKcal = b.portions > 0 ? b.macros.kcal / b.portions : 0
           return aKcal - bKcal
         }
-        case "kcal-desc": {
+        case 'kcal-desc': {
           const aKcal = a.portions > 0 ? a.macros.kcal / a.portions : 0
           const bKcal = b.portions > 0 ? b.macros.kcal / b.portions : 0
           return bKcal - aKcal
         }
-        case "protein-desc": {
+        case 'protein-desc': {
           const aProt = a.portions > 0 ? a.macros.protein / a.portions : 0
           const bProt = b.portions > 0 ? b.macros.protein / b.portions : 0
           return bProt - aProt
         }
-        case "alpha":
+        case 'alpha':
           return a.title.localeCompare(b.title)
-        case "recent":
+        case 'recent':
         default:
           return b.createdAt - a.createdAt
       }
@@ -176,22 +170,22 @@ export function BrowsePage() {
               <SearchBar value={search} onChange={setSearch} />
             </div>
             <button
-  onClick={() => setFavoritesOnly(!favoritesOnly)}
-  className={`p-2.5 rounded-lg border transition-colors duration-150 ${
-    favoritesOnly
-      ? "bg-primary text-primary-foreground border-primary"
-      : "bg-card text-foreground border-border hover:bg-accent"
-  }`}
-  aria-label="Show favorites only"
->
-  <Heart className="h-4 w-4" />
-</button>
+              onClick={() => setFavoritesOnly(!favoritesOnly)}
+              className={`p-2.5 rounded-lg border transition-colors duration-150 ${
+                favoritesOnly
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-foreground border-border hover:bg-accent'
+              }`}
+              aria-label="Show favorites only"
+            >
+              <Heart className="h-4 w-4" />
+            </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2.5 rounded-lg border transition-colors duration-150 ${
                 showFilters || filterTags.length > 0
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-foreground border-border hover:bg-accent"
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-foreground border-border hover:bg-accent'
               }`}
               aria-label="Toggle filters"
             >
@@ -215,12 +209,12 @@ export function BrowsePage() {
               <BookOpen className="h-8 w-8 text-muted-foreground" />
             </div>
             <h2 className="text-lg font-semibold text-foreground mb-1">
-              {recipes.length === 0 ? "No recipes yet" : "No matches found"}
+              {recipes.length === 0 ? 'No recipes yet' : 'No matches found'}
             </h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">
               {recipes.length === 0
-                ? "Create your first recipe to get started with your personal cookbook."
-                : "Try adjusting your search or filters."}
+                ? 'Create your first recipe to get started with your personal cookbook.'
+                : 'Try adjusting your search or filters.'}
             </p>
             {recipes.length === 0 && (
               <Link
@@ -239,6 +233,9 @@ export function BrowsePage() {
             ))}
           </div>
         )}
+        <p className="py-12">
+          Found <span className="font-bold">{filtered.length}</span> recipes
+        </p>
       </main>
     </div>
   )

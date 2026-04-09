@@ -245,6 +245,7 @@ const KEYWORD_MAP: [string, GroceryCategory][] = [
   ['ägg', 'Dairy & Eggs'],
   ['kvarg', 'Dairy & Eggs'],
   ['quark', 'Dairy & Eggs'],
+  ['tofu', 'Dairy & Eggs'],
 
   // Bakery
   ['sourdough', 'Bakery'],
@@ -521,6 +522,7 @@ const KEYWORD_MAP: [string, GroceryCategory][] = [
   ['chili', 'Spices & Seasonings'],
   ['vanilla', 'Spices & Seasonings'],
   ['vanilj', 'Spices & Seasonings'],
+  ['bikarbonat', 'Spices & Seasonings'],
 
   // Beverages
   ['orange juice', 'Beverages'],
@@ -649,6 +651,7 @@ const KEYWORD_MAP: [string, GroceryCategory][] = [
   ['bomullsrondeller', 'Hygiene'],
   ['band-aid', 'Hygiene'],
   ['plåster', 'Hygiene'],
+  ['D-vitamin', 'Hygiene'],
 ]
 
 export function lookupCategory(itemName: string): GroceryCategory | null {
