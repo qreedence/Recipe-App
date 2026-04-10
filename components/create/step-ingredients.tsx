@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Plus, Trash2, FlaskConical, Flame, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -37,6 +37,11 @@ export function StepIngredients({
   const [macroModalIndex, setMacroModalIndex] = useState<number | null>(null)
   const [customUnitIndexes, setCustomUnitIndexes] = useState<Set<number>>(new Set())
   const isMobile = useIsMobile()
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [ingredients.length])
 
   function addIngredient() {
     setIngredients([
@@ -126,6 +131,11 @@ export function StepIngredients({
                   placeholder="Qty"
                   className="w-20 shrink-0"
                   step="any"
+                  onFocus={(e) => {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }, 300)
+                  }}
                 />
                 {customUnitIndexes.has(i) ? (
                   <div className="flex items-center gap-1 shrink-0">
@@ -273,6 +283,7 @@ export function StepIngredients({
               )}
             </div>
           ))}
+          <div ref={bottomRef} />
         </div>
         <Button variant="outline" size="sm" onClick={addIngredient} className="mt-3">
           <Plus className="h-4 w-4 mr-1" />
