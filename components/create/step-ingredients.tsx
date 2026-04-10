@@ -134,7 +134,7 @@ export function StepIngredients({
                   onFocus={(e) => {
                     setTimeout(() => {
                       e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                    }, 300)
+                    }, 100)
                   }}
                 />
                 {customUnitIndexes.has(i) ? (
@@ -144,6 +144,11 @@ export function StepIngredients({
                       onChange={(e) => updateField(i, 'unit', e.target.value)}
                       placeholder="Unit"
                       className="w-20"
+                      onFocus={(e) => {
+                        setTimeout(() => {
+                          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        }, 100)
+                      }}
                     />
                     <button
                       type="button"
@@ -157,6 +162,11 @@ export function StepIngredients({
                       }}
                       className="p-1 text-muted-foreground hover:text-foreground transition-colors"
                       aria-label="Back to unit list"
+                      onFocus={(e) => {
+                        setTimeout(() => {
+                          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        }, 300)
+                      }}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -173,6 +183,11 @@ export function StepIngredients({
                       }
                     }}
                     className="h-9 rounded-md border border-border bg-background px-2 text-sm shrink-0 w-24"
+                    onFocus={(e) => {
+                      setTimeout(() => {
+                        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                      }, 300)
+                    }}
                   >
                     <option value="">Unit</option>
                     <optgroup label="Weight">
