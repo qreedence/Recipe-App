@@ -131,6 +131,11 @@ export function StepIngredients({
                   placeholder="Qty"
                   className="w-20 shrink-0"
                   step="any"
+                  onFocus={(e) => {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }, 300)
+                  }}
                 />
                 {customUnitIndexes.has(i) ? (
                   <div className="flex items-center gap-1 shrink-0">
