@@ -240,6 +240,7 @@ export function StepIngredients({
                       </SelectGroup>
                       <SelectGroup>
                         <SelectLabel>Volume</SelectLabel>
+                        <SelectItem value="krm">krm</SelectItem>
                         <SelectItem value="ml">ml</SelectItem>
                         <SelectItem value="dl">dl</SelectItem>
                         <SelectItem value="l">l</SelectItem>

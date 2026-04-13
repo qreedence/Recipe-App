@@ -11,6 +11,7 @@ export const INGREDIENT_UNITS = [
   'g',
   'kg',
   // Volume
+  'krm',
   'ml',
   'dl',
   'l',
