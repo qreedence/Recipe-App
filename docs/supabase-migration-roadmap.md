@@ -61,9 +61,19 @@ One PR per table. Each wires read-through cache (Dexie first, Supabase refetch) 
 - Remove dead code, dedupe abstractions
 - Docs update
 
+## PR #2 decisions
+
+- **Ingredients/steps/tags/macros as JSONB**, not separate tables. Current app never queries _by_ ingredient, so relational normalization adds no value. Can normalize later.
+- **`recipe_drafts` stays local only.** Drafts are ephemeral form state; syncing across devices is noise, not value.
+- **Images stay base64 in `image text` column.** Migrating to Supabase Storage is a separate optimization, not blocking the auth/sync work.
+- **`meal_plan_entries.recipe_id` has no FK** — entries hold a denormalized recipe snapshot that should survive recipe deletion (matches current Dexie behavior).
+- **`meal_plan_entries` PK** is a server-generated UUID with `unique(user_id, date, meal_type)` as the natural key. Client's synthetic `"date_mealType"` ID is a Dexie-only concern, storage layer translates.
+- **`updated_at timestamptz` on every table** with a trigger, for future conflict resolution. Client types don't need to expose it yet.
+
 ## Open questions / deferred
 
 - Realtime subscriptions vs polling: deferred to PR #3; start with polling + SWR revalidation, add realtime if needed.
 - Multi-table transaction loss on import: `lib/import-db.ts` uses Dexie transactions. Decide in PR #2 between Postgres RPC or accepting eventual consistency during restore.
 - OAuth: after PR #1 ships.
 - Shared/public recipes: out of scope for this migration.
+- Image storage: migrate `image` column from base64 text to Supabase Storage references, post-migration.
