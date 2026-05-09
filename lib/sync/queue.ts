@@ -53,3 +53,10 @@ export async function retryAllFailed(): Promise<void> {
     .aboveOrEqual(1)
     .modify({ attemptCount: 0, lastError: null })
 }
+
+export async function purgeExhausted(maxAttempts: number): Promise<void> {
+  await db.pendingWrites
+    .where('attemptCount')
+    .aboveOrEqual(maxAttempts)
+    .delete()
+}
