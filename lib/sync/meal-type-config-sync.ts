@@ -118,10 +118,15 @@ export async function migrateLocalMealTypeConfigToCloud(): Promise<number> {
 
   const cloudWeekdays = new Set((data ?? []).map((r) => String(r.weekday)))
   const missing = localConfigs.filter((c) => !cloudWeekdays.has(c.id))
+
   if (missing.length === 0) return 0
 
   for (const config of missing) {
-    await enqueue('meal_type_config', 'upsert', config.id, configToRow(config, userId))
+    try {
+      await enqueue('meal_type_config', 'upsert', config.id, configToRow(config, userId))
+    } catch {
+      // Skip and continue
+    }
   }
 
   return missing.length

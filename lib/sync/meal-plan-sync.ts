@@ -142,12 +142,12 @@ export async function migrateLocalMealPlanToCloud(): Promise<number> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('meal_plan_entries')
-    .select('id')
+    .select('date, meal_type')
     .eq('user_id', userId)
   if (error) return 0
 
-  const cloudIds = new Set((data ?? []).map((r) => r.id))
-  const missing = localEntries.filter((e) => !cloudIds.has(e.id))
+  const cloudKeys = new Set((data ?? []).map((r) => `${r.date}_${r.meal_type}`))
+  const missing = localEntries.filter((e) => !cloudKeys.has(e.id))
   if (missing.length === 0) return 0
 
   for (const entry of missing) {
