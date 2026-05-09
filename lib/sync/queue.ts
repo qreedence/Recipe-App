@@ -43,6 +43,10 @@ export async function count(): Promise<number> {
   return db.pendingWrites.count()
 }
 
+export async function hasPendingForTable(table: string): Promise<boolean> {
+  return (await db.pendingWrites.where('table').equals(table).count()) > 0
+}
+
 export async function clear(): Promise<void> {
   await db.pendingWrites.clear()
 }

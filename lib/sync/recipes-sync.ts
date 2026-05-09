@@ -14,7 +14,7 @@ import type {
   TablesInsert,
 } from '@/lib/supabase/database.types'
 import type { Recipe } from '@/lib/types'
-import { enqueue, peekAll } from './queue'
+import { enqueue, peekAll, hasPendingForTable } from './queue'
 import { drain, registerSyncDispatcher, type SyncDispatcher } from './worker'
 
 // ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ export async function hydrateRecipesFromCloud(): Promise<void> {
 
 export async function getRecipes(): Promise<Recipe[]> {
   const userId = getCurrentUserId()
-  if (userId) {
+  if (userId && !(await hasPendingForTable('recipes'))) {
     try {
       const supabase = createClient()
       const { data, error } = await supabase
@@ -130,7 +130,7 @@ export async function getRecipes(): Promise<Recipe[]> {
 
 export async function getRecipe(id: string): Promise<Recipe | null> {
   const userId = getCurrentUserId()
-  if (userId) {
+  if (userId && !(await hasPendingForTable('recipes'))) {
     try {
       const supabase = createClient()
       const { data, error } = await supabase
@@ -150,29 +150,50 @@ export async function getRecipe(id: string): Promise<Recipe | null> {
 }
 
 export async function saveRecipe(recipe: Recipe): Promise<void> {
-  await db.recipes.put(recipe)
   const userId = getCurrentUserId()
-  if (!userId) return
-  await enqueue('recipes', 'upsert', recipe.id, recipeToRow(recipe, userId))
-  void drain()
+  if (userId) {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('recipes').upsert(recipeToRow(recipe, userId))
+      if (!error) {
+        await db.recipes.put(recipe)
+        return
+      }
+    } catch {}
+    await db.recipes.put(recipe)
+    await enqueue('recipes', 'upsert', recipe.id, recipeToRow(recipe, userId))
+    return
+  }
+  await db.recipes.put(recipe)
 }
 
 export async function updateRecipe(id: string, updates: Partial<Recipe>): Promise<void> {
   await db.recipes.update(id, updates)
-  const userId = getCurrentUserId()
-  if (!userId) return
   const full = await db.recipes.get(id)
   if (!full) return
-  await enqueue('recipes', 'upsert', id, recipeToRow(full, userId))
-  void drain()
+  const userId = getCurrentUserId()
+  if (userId) {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('recipes').upsert(recipeToRow(full, userId))
+      if (!error) return
+    } catch {}
+    await enqueue('recipes', 'upsert', id, recipeToRow(full, userId))
+    return
+  }
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
   await db.recipes.delete(id)
   const userId = getCurrentUserId()
-  if (!userId) return
-  await enqueue('recipes', 'delete', id, null)
-  void drain()
+  if (userId) {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('recipes').delete().eq('id', id)
+      if (!error) return
+    } catch {}
+    await enqueue('recipes', 'delete', id, null)
+  }
 }
 
 // ---------------------------------------------------------------------------

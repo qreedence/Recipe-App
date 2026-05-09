@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getCurrentUserId } from '@/lib/supabase/session'
 import type { TablesInsert, Tables } from '@/lib/supabase/database.types'
 import type { MealTypeConfig } from '@/lib/types'
-import { enqueue, peekAll } from './queue'
+import { enqueue, peekAll, hasPendingForTable } from './queue'
 import { drain, registerSyncDispatcher, type SyncDispatcher } from './worker'
 
 // ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ export async function hydrateMealTypeConfigFromCloud(): Promise<void> {
 
 export async function getMealTypeConfigs(): Promise<MealTypeConfig[]> {
   const userId = getCurrentUserId()
-  if (userId) {
+  if (userId && !(await hasPendingForTable('meal_type_config'))) {
     try {
       const supabase = createClient()
       const { data, error } = await supabase
@@ -109,8 +109,12 @@ export async function saveMealTypeConfig(config: MealTypeConfig): Promise<void> 
   await db.mealTypeConfig.put(config)
   const userId = getCurrentUserId()
   if (!userId) return
+  try {
+    const supabase = createClient()
+    const { error } = await supabase.from('meal_type_config').upsert(configToRow(config, userId))
+    if (!error) return
+  } catch {}
   await enqueue('meal_type_config', 'upsert', config.id, configToRow(config, userId))
-  void drain()
 }
 
 // ---------------------------------------------------------------------------

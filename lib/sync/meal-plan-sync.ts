@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getCurrentUserId } from '@/lib/supabase/session'
 import type { TablesInsert, Tables } from '@/lib/supabase/database.types'
 import type { MealPlanEntry } from '@/lib/types'
-import { enqueue, peekAll } from './queue'
+import { enqueue, peekAll, hasPendingForTable } from './queue'
 import { drain, registerSyncDispatcher, type SyncDispatcher } from './worker'
 
 // ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ export async function hydrateMealPlanFromCloud(): Promise<void> {
 
 export async function getMealPlanEntries(weekDates: string[]): Promise<MealPlanEntry[]> {
   const userId = getCurrentUserId()
-  if (userId && weekDates.length > 0) {
+  if (userId && weekDates.length > 0 && !(await hasPendingForTable('meal_plan_entries'))) {
     try {
       const supabase = createClient()
       const { data, error } = await supabase
@@ -121,16 +121,33 @@ export async function saveMealPlanEntry(entry: MealPlanEntry): Promise<void> {
   await db.mealPlanEntries.put(entry)
   const userId = getCurrentUserId()
   if (!userId) return
+  try {
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('meal_plan_entries')
+      .upsert(entryToRow(entry, userId), { onConflict: 'user_id,date,meal_type' })
+    if (!error) return
+  } catch {}
   await enqueue('meal_plan_entries', 'upsert', entry.id, entryToRow(entry, userId))
-  void drain()
 }
 
 export async function deleteMealPlanEntry(id: string): Promise<void> {
   await db.mealPlanEntries.delete(id)
   const userId = getCurrentUserId()
   if (!userId) return
+  const [date, ...rest] = id.split('_')
+  const mealType = rest.join('_')
+  try {
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('meal_plan_entries')
+      .delete()
+      .eq('user_id', userId)
+      .eq('date', date)
+      .eq('meal_type', mealType)
+    if (!error) return
+  } catch {}
   await enqueue('meal_plan_entries', 'delete', id, null)
-  void drain()
 }
 
 export async function clearMealPlanEntries(weekDates: string[]): Promise<void> {
@@ -138,10 +155,18 @@ export async function clearMealPlanEntries(weekDates: string[]): Promise<void> {
   await db.mealPlanEntries.bulkDelete(entries.map((e) => e.id))
   const userId = getCurrentUserId()
   if (!userId) return
+  try {
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('meal_plan_entries')
+      .delete()
+      .eq('user_id', userId)
+      .in('date', weekDates)
+    if (!error) return
+  } catch {}
   for (const entry of entries) {
     await enqueue('meal_plan_entries', 'delete', entry.id, null)
   }
-  void drain()
 }
 
 // ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getCurrentUserId } from '@/lib/supabase/session'
 import type { TablesInsert, Tables } from '@/lib/supabase/database.types'
 import type { ShoppingItem } from '@/lib/types'
-import { enqueue, peekAll } from './queue'
+import { enqueue, peekAll, hasPendingForTable } from './queue'
 import { drain, registerSyncDispatcher, type SyncDispatcher } from './worker'
 
 // ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ export async function hydrateShoppingFromCloud(): Promise<void> {
 
 export async function getShoppingItems(): Promise<ShoppingItem[]> {
   const userId = getCurrentUserId()
-  if (userId) {
+  if (userId && !(await hasPendingForTable('shopping_items'))) {
     try {
       const supabase = createClient()
       const { data, error } = await supabase
@@ -111,28 +111,41 @@ export async function addShoppingItems(items: ShoppingItem[]): Promise<void> {
   await db.shoppingItems.bulkPut(items)
   const userId = getCurrentUserId()
   if (!userId) return
+  const rows = items.map((item) => itemToRow(item, userId))
+  try {
+    const supabase = createClient()
+    const { error } = await supabase.from('shopping_items').upsert(rows)
+    if (!error) return
+  } catch {}
   for (const item of items) {
     await enqueue('shopping_items', 'upsert', item.id, itemToRow(item, userId))
   }
-  void drain()
 }
 
 export async function updateShoppingItem(id: string, updates: Partial<ShoppingItem>): Promise<void> {
   await db.shoppingItems.update(id, updates)
-  const userId = getCurrentUserId()
-  if (!userId) return
   const full = await db.shoppingItems.get(id)
   if (!full) return
+  const userId = getCurrentUserId()
+  if (!userId) return
+  try {
+    const supabase = createClient()
+    const { error } = await supabase.from('shopping_items').upsert(itemToRow(full, userId))
+    if (!error) return
+  } catch {}
   await enqueue('shopping_items', 'upsert', id, itemToRow(full, userId))
-  void drain()
 }
 
 export async function deleteShoppingItem(id: string): Promise<void> {
   await db.shoppingItems.delete(id)
   const userId = getCurrentUserId()
   if (!userId) return
+  try {
+    const supabase = createClient()
+    const { error } = await supabase.from('shopping_items').delete().eq('id', id)
+    if (!error) return
+  } catch {}
   await enqueue('shopping_items', 'delete', id, null)
-  void drain()
 }
 
 export async function clearCheckedItems(): Promise<void> {
@@ -141,10 +154,15 @@ export async function clearCheckedItems(): Promise<void> {
   await db.shoppingItems.bulkDelete(checked.map((i) => i.id))
   const userId = getCurrentUserId()
   if (!userId) return
+  const ids = checked.map((i) => i.id)
+  try {
+    const supabase = createClient()
+    const { error } = await supabase.from('shopping_items').delete().in('id', ids)
+    if (!error) return
+  } catch {}
   for (const item of checked) {
     await enqueue('shopping_items', 'delete', item.id, null)
   }
-  void drain()
 }
 
 export async function clearAllShoppingItems(): Promise<void> {
@@ -152,10 +170,15 @@ export async function clearAllShoppingItems(): Promise<void> {
   await db.shoppingItems.clear()
   const userId = getCurrentUserId()
   if (!userId) return
+  const ids = all.map((i) => i.id)
+  try {
+    const supabase = createClient()
+    const { error } = await supabase.from('shopping_items').delete().in('id', ids)
+    if (!error) return
+  } catch {}
   for (const item of all) {
     await enqueue('shopping_items', 'delete', item.id, null)
   }
-  void drain()
 }
 
 // ---------------------------------------------------------------------------
