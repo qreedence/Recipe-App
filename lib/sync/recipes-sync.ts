@@ -164,17 +164,23 @@ export async function migrateLocalRecipesToCloud(): Promise<number> {
   const missing = localRecipes.filter((r) => !cloudIds.has(r.id))
   if (missing.length === 0) return 0
 
+  let migrated = 0
   for (const recipe of missing) {
-    if (isBase64Image(recipe.image)) {
-      try {
-        recipe.image = await uploadImage(recipe.image!, recipe.id)
-      } catch {
-        recipe.image = null
+    try {
+      if (isBase64Image(recipe.image)) {
+        try {
+          recipe.image = await uploadImage(recipe.image!, recipe.id)
+          await db.recipes.put(recipe)
+        } catch {
+          // Image upload failed — keep the base64 locally, sync without it
+        }
       }
+      await enqueue('recipes', 'upsert', recipe.id, recipeToRow(recipe, userId))
+      migrated++
+    } catch {
+      // Skip this recipe, continue with the rest
     }
-    await db.recipes.put(recipe)
-    await enqueue('recipes', 'upsert', recipe.id, recipeToRow(recipe, userId))
   }
 
-  return missing.length
+  return migrated
 }
