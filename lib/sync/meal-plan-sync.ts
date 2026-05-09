@@ -98,6 +98,22 @@ export async function hydrateMealPlanFromCloud(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function getMealPlanEntries(weekDates: string[]): Promise<MealPlanEntry[]> {
+  const userId = getCurrentUserId()
+  if (userId && weekDates.length > 0) {
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('meal_plan_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .in('date', weekDates)
+      if (!error && data) {
+        const entries = data.map(rowToEntry)
+        await db.mealPlanEntries.bulkPut(entries)
+        return entries
+      }
+    } catch {}
+  }
   return db.mealPlanEntries.where('date').anyOf(weekDates).toArray()
 }
 

@@ -5,7 +5,7 @@ import { ALL_MEAL_TYPES, DEFAULT_MEAL_TYPES, MealType, MealTypeConfig } from '@/
 export function useMealTypeConfig() {
   const { data, mutate } = useSWR('meal-type-config', getMealTypeConfigs, {
     fallbackData: [],
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
   })
 
   function getEnabledTypes(dayIndex: number): MealType[] {

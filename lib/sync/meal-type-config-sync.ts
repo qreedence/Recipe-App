@@ -87,6 +87,21 @@ export async function hydrateMealTypeConfigFromCloud(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function getMealTypeConfigs(): Promise<MealTypeConfig[]> {
+  const userId = getCurrentUserId()
+  if (userId) {
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('meal_type_config')
+        .select('*')
+        .eq('user_id', userId)
+      if (!error && data) {
+        const configs = data.map(rowToConfig)
+        await db.mealTypeConfig.bulkPut(configs)
+        return configs
+      }
+    } catch {}
+  }
   return db.mealTypeConfig.toArray()
 }
 

@@ -109,10 +109,43 @@ export async function hydrateRecipesFromCloud(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function getRecipes(): Promise<Recipe[]> {
+  const userId = getCurrentUserId()
+  if (userId) {
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      if (!error && data) {
+        const recipes = data.map(rowToRecipe)
+        await db.recipes.bulkPut(recipes)
+        return recipes
+      }
+    } catch {}
+  }
   return db.recipes.orderBy('createdAt').reverse().toArray()
 }
 
 export async function getRecipe(id: string): Promise<Recipe | null> {
+  const userId = getCurrentUserId()
+  if (userId) {
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', userId)
+        .single()
+      if (!error && data) {
+        const recipe = rowToRecipe(data)
+        await db.recipes.put(recipe)
+        return recipe
+      }
+    } catch {}
+  }
   return (await db.recipes.get(id)) ?? null
 }
 

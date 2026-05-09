@@ -14,7 +14,7 @@ const KEY = "shopping-items"
 export function useShoppingItems() {
   const { data, error, isLoading } = useSWR(KEY, getShoppingItems, {
     fallbackData: [],
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
   })
 
   return {

@@ -12,7 +12,7 @@ export function useMealPlan(weekDates: string[]) {
 
   const { data, error, isLoading, mutate } = useSWR(key, () => getMealPlanEntries(weekDates), {
     fallbackData: [],
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
   })
 
   async function addEntry(entry: MealPlanEntry) {

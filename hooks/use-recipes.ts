@@ -5,7 +5,7 @@ import { Recipe } from "@/lib/types"
 export function useRecipes() {
   const { data, error, isLoading } = useSWR("recipes", getRecipes, {
     fallbackData: [],
-    revalidateOnFocus: false,
+    revalidateOnFocus: true,
   })
 
   return {

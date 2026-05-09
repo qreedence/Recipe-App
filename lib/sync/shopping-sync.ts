@@ -88,6 +88,22 @@ export async function hydrateShoppingFromCloud(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function getShoppingItems(): Promise<ShoppingItem[]> {
+  const userId = getCurrentUserId()
+  if (userId) {
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('shopping_items')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+      if (!error && data) {
+        const items = data.map(rowToItem)
+        await db.shoppingItems.bulkPut(items)
+        return items
+      }
+    } catch {}
+  }
   return db.shoppingItems.orderBy('createdAt').toArray()
 }
 
