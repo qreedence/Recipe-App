@@ -96,115 +96,151 @@ export function SharedRecipePreview({ recipe: snapshot }: SharedRecipePreviewPro
     if (pendingNavigation) router.push(pendingNavigation)
   }
 
-  return (
-    <div className="min-h-screen bg-background pb-6">
-      <div className="relative">
-        {snapshot.image ? (
-          <div className="aspect-16/10 sm:aspect-16/7 bg-muted">
-            <img src={snapshot.image} alt={snapshot.title} className="w-full h-full object-cover" />
-          </div>
-        ) : (
-          <div className="aspect-16/10 sm:aspect-16/7 bg-muted flex items-center justify-center">
-            <Drumstick className="h-16 w-16 text-muted-foreground" />
-          </div>
-        )}
+  const imageBlock = snapshot.image ? (
+    <img src={snapshot.image} alt={snapshot.title} className="w-full h-full object-cover" />
+  ) : (
+    <div className="w-full h-full bg-muted flex items-center justify-center">
+      <Drumstick className="h-16 w-16 text-muted-foreground" />
+    </div>
+  )
 
-        <button
-          onClick={() => handleNavigate('/')}
-          className="absolute top-4 left-4 p-2 rounded-full bg-foreground/50 text-background hover:bg-foreground/70 transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+  const saveButton = (
+    <div className="mt-5">
+      {saved ? (
+        <Button disabled className="w-full">
+          <Check className="h-4 w-4 mr-1.5" />
+          Saved to your recipes
+        </Button>
+      ) : (
+        <Button onClick={handleSave} className="w-full bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500">
+          <BookmarkPlus className="h-4 w-4 mr-1.5" />
+          {user ? 'Save to my recipes' : 'Sign in to save'}
+        </Button>
+      )}
+    </div>
+  )
+
+  const titleCard = (
+    <div className="bg-card rounded-xl border border-border p-5 mb-4">
+      <p className="text-xs font-medium text-orange-500 uppercase tracking-wider mb-2">
+        Shared recipe
+      </p>
+      <h1 className="text-xl font-bold text-card-foreground text-balance">
+        {snapshot.title}
+      </h1>
+      <p className="text-sm text-muted-foreground mt-1">
+        {snapshot.portions} {snapshot.portions === 1 ? 'portion' : 'portions'}
+      </p>
+
+      <div className="grid grid-cols-4 gap-2 mt-4">
+        {macroPills.map(({ label, value, unit, icon: Icon, color }) => (
+          <div
+            key={label}
+            className={`flex flex-col items-center gap-1 rounded-lg py-2.5 px-2 ${color}`}
+          >
+            <Icon className="h-4 w-4" />
+            <span className="text-sm font-bold leading-none">
+              {value}
+              <span className="text-xs font-normal ml-0.5">{unit}</span>
+            </span>
+            <span className="text-[10px] leading-none opacity-80">{label}</span>
+          </div>
+        ))}
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 -mt-6 relative z-10">
-        <div className="bg-card rounded-xl border border-border p-5 mb-4">
-          <p className="text-xs font-medium text-orange-500 uppercase tracking-wider mb-2">
-            Shared recipe
-          </p>
-          <h1 className="text-xl font-bold text-card-foreground text-balance">
-            {snapshot.title}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {snapshot.portions} {snapshot.portions === 1 ? 'portion' : 'portions'}
-          </p>
+      {snapshot.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-4">
+          {snapshot.tags.map((tag) => (
+            <span
+              key={tag}
+              className="px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-medium"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
 
-          <div className="grid grid-cols-4 gap-2 mt-4">
-            {macroPills.map(({ label, value, unit, icon: Icon, color }) => (
-              <div
-                key={label}
-                className={`flex flex-col items-center gap-1 rounded-lg py-2.5 px-2 ${color}`}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="text-sm font-bold leading-none">
-                  {value}
-                  <span className="text-xs font-normal ml-0.5">{unit}</span>
-                </span>
-                <span className="text-[10px] leading-none opacity-80">{label}</span>
-              </div>
-            ))}
+      {saveButton}
+    </div>
+  )
+
+  const ingredientsSection = snapshot.ingredients.length > 0 && (
+    <section className="mb-6">
+      <h2 className="text-base font-semibold text-foreground mb-3">Ingredients</h2>
+      <div className="bg-card rounded-xl border border-border divide-y divide-border">
+        {snapshot.ingredients.map((ing) => (
+          <div key={ing.id} className="flex items-center justify-between px-4 py-3">
+            <span className="text-sm text-card-foreground">{ing.name}</span>
+            <span className="text-sm text-muted-foreground shrink-0 ml-4">
+              {ing.quantity != null ? `${ing.quantity} ${ing.unit}` : ing.unit}
+            </span>
           </div>
+        ))}
+      </div>
+    </section>
+  )
 
-          {snapshot.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-4">
-              {snapshot.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-medium"
-                >
-                  {tag}
-                </span>
-              ))}
+  const stepsSection = snapshot.steps.length > 0 && (
+    <section className="mb-10">
+      <h2 className="text-base font-semibold text-foreground mb-3">Instructions</h2>
+      <div className="flex flex-col gap-4">
+        {snapshot.steps.map((s, i) => (
+          <div key={i} className="flex gap-3">
+            <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+              {i + 1}
             </div>
-          )}
+            <p className="text-sm text-foreground leading-relaxed pt-1">{s}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
 
-          <div className="mt-5">
-            {saved ? (
-              <Button disabled className="w-full">
-                <Check className="h-4 w-4 mr-1.5" />
-                Saved to your recipes
-              </Button>
-            ) : (
-              <Button onClick={handleSave} className="w-full bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500">
-                <BookmarkPlus className="h-4 w-4 mr-1.5" />
-                {user ? 'Save to my recipes' : 'Sign in to save'}
-              </Button>
-            )}
+  return (
+    <div className="min-h-screen bg-background pb-6">
+      {/* Mobile layout */}
+      <div className="lg:hidden">
+        <div className="relative">
+          <div className="aspect-16/10 sm:aspect-16/7 bg-muted">
+            {imageBlock}
+          </div>
+          <button
+            onClick={() => handleNavigate('/')}
+            className="absolute top-4 left-4 p-2 rounded-full bg-foreground/50 text-background hover:bg-foreground/70 transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="max-w-2xl mx-auto px-4 -mt-6 relative z-10">
+          {titleCard}
+          {ingredientsSection}
+          {stepsSection}
+        </div>
+      </div>
+
+      {/* Desktop layout */}
+      <div className="hidden lg:flex max-w-6xl mx-auto px-6 py-6 gap-8">
+        <div className="shrink-0 pt-1">
+          <button
+            onClick={() => handleNavigate('/')}
+            className="flex items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="w-2/5 shrink-0">
+          <div className="sticky top-6 rounded-xl overflow-hidden bg-muted aspect-square">
+            {imageBlock}
           </div>
         </div>
-
-        {snapshot.ingredients.length > 0 && (
-          <section className="mb-6">
-            <h2 className="text-base font-semibold text-foreground mb-3">Ingredients</h2>
-            <div className="bg-card rounded-xl border border-border divide-y divide-border">
-              {snapshot.ingredients.map((ing) => (
-                <div key={ing.id} className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-card-foreground">{ing.name}</span>
-                  <span className="text-sm text-muted-foreground shrink-0 ml-4">
-                    {ing.quantity != null ? `${ing.quantity} ${ing.unit}` : ing.unit}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {snapshot.steps.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-base font-semibold text-foreground mb-3">Instructions</h2>
-            <div className="flex flex-col gap-4">
-              {snapshot.steps.map((s, i) => (
-                <div key={i} className="flex gap-3">
-                  <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                    {i + 1}
-                  </div>
-                  <p className="text-sm text-foreground leading-relaxed pt-1">{s}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        <div className="flex-1 min-w-0">
+          {titleCard}
+          {ingredientsSection}
+          {stepsSection}
+        </div>
       </div>
 
       <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>

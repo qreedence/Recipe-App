@@ -9,6 +9,7 @@ import { FilterChips } from '@/components/filter-chips'
 import { RecipeCard } from '@/components/recipe-card'
 import { UserMenu } from './auth/user-menu'
 import { InstallButton } from '@/components/install-button'
+import { ShareImportButton, ClipboardShareDetector } from '@/components/share-import-dialog'
 
 type SortOption = 'recent' | 'rating' | 'kcal-asc' | 'kcal-desc' | 'protein-desc' | 'alpha'
 
@@ -169,6 +170,7 @@ export function BrowsePage() {
             <div className="flex-1">
               <SearchBar value={search} onChange={setSearch} />
             </div>
+            <ShareImportButton />
             <button
               onClick={() => setFavoritesOnly(!favoritesOnly)}
               className={`p-2.5 rounded-lg border transition-colors duration-150 ${
@@ -237,6 +239,7 @@ export function BrowsePage() {
           Found <span className="font-bold">{filtered.length}</span> recipes
         </p>
       </main>
+      <ClipboardShareDetector />
     </div>
   )
 }
