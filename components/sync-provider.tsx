@@ -27,6 +27,7 @@ export function SyncProvider() {
     let cancelled = false
 
     const run = async () => {
+      await purgeExhausted(5)
       await drain()
       if (cancelled) return
 
