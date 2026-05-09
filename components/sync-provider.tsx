@@ -43,7 +43,7 @@ export function SyncProvider() {
         for (const err of errors) {
           toast.error(`Sync failed: ${err.table} ${err.operation} (${err.rowKey})`, {
             description: err.message,
-            duration: 10000,
+            duration: Infinity,
           })
         }
         clearSyncErrors()
