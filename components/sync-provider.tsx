@@ -6,6 +6,9 @@ import { useUser } from '@/hooks/use-user'
 import { setCurrentUserId } from '@/lib/supabase/session'
 import { drain, startSyncWorker } from '@/lib/sync/worker'
 import { hydrateRecipesFromCloud, migrateLocalRecipesToCloud } from '@/lib/sync/recipes-sync'
+import { hydrateShoppingFromCloud, migrateLocalShoppingToCloud } from '@/lib/sync/shopping-sync'
+import { hydrateMealPlanFromCloud, migrateLocalMealPlanToCloud } from '@/lib/sync/meal-plan-sync'
+import { hydrateMealTypeConfigFromCloud, migrateLocalMealTypeConfigToCloud } from '@/lib/sync/meal-type-config-sync'
 
 // Mounts once at the root layout. Keeps the non-React session id in sync with
 // auth state, starts the background sync worker when signed in, and triggers
@@ -24,13 +27,26 @@ export function SyncProvider() {
     const run = async () => {
       await drain()
       if (cancelled) return
+
       await migrateLocalRecipesToCloud()
+      await migrateLocalShoppingToCloud()
+      await migrateLocalMealPlanToCloud()
+      await migrateLocalMealTypeConfigToCloud()
       if (cancelled) return
+
       await drain()
       if (cancelled) return
+
       await hydrateRecipesFromCloud()
+      await hydrateShoppingFromCloud()
+      await hydrateMealPlanFromCloud()
+      await hydrateMealTypeConfigFromCloud()
       if (cancelled) return
+
       await globalMutate('recipes')
+      await globalMutate('shopping-items')
+      await globalMutate((key) => typeof key === 'string' && key.startsWith('meal-plan-'), undefined, { revalidate: true })
+      await globalMutate('meal-type-config')
     }
     void run()
 

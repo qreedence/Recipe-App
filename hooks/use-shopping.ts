@@ -6,7 +6,7 @@ import {
   deleteShoppingItem as storageDelete,
   clearCheckedItems as storageClearChecked,
   clearAllShoppingItems as storageClearAll,
-} from "@/lib/storage"
+} from "@/lib/sync/shopping-sync"
 import { ShoppingItem } from "@/lib/types"
 
 const KEY = "shopping-items"
