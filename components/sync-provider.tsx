@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { useUser } from '@/hooks/use-user'
 import { setCurrentUserId } from '@/lib/supabase/session'
 import { drain, startSyncWorker, getSyncErrors, clearSyncErrors } from '@/lib/sync/worker'
-import { retryAllFailed } from '@/lib/sync/queue'
+import { purgeExhausted } from '@/lib/sync/queue'
 import { hydrateRecipesFromCloud, migrateLocalRecipesToCloud } from '@/lib/sync/recipes-sync'
 import { hydrateShoppingFromCloud, migrateLocalShoppingToCloud } from '@/lib/sync/shopping-sync'
 import { hydrateMealPlanFromCloud, migrateLocalMealPlanToCloud } from '@/lib/sync/meal-plan-sync'
@@ -48,7 +48,7 @@ export function SyncProvider() {
           })
         }
         clearSyncErrors()
-        await retryAllFailed()
+        await purgeExhausted(5)
       }
 
       await hydrateRecipesFromCloud()
