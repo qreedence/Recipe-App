@@ -27,9 +27,10 @@ export type SyncError = {
 
 let draining = false
 const syncErrors: SyncError[] = []
+const reportedKeys = new Set<string>()
 
 export function getSyncErrors(): SyncError[] {
-  return syncErrors
+  return syncErrors.splice(0)
 }
 
 export function clearSyncErrors(): void {
@@ -51,7 +52,9 @@ export async function drain(): Promise<void> {
       const dispatcher = dispatchers.get(write.table)
       if (!dispatcher) continue
       if (write.attemptCount >= MAX_ATTEMPTS) {
-        if (write.lastError) {
+        const key = `${write.table}:${write.rowKey}`
+        if (write.lastError && !reportedKeys.has(key)) {
+          reportedKeys.add(key)
           syncErrors.push({
             table: write.table,
             operation: write.operation,

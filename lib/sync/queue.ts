@@ -46,3 +46,10 @@ export async function count(): Promise<number> {
 export async function clear(): Promise<void> {
   await db.pendingWrites.clear()
 }
+
+export async function retryAllFailed(): Promise<void> {
+  await db.pendingWrites
+    .where('attemptCount')
+    .aboveOrEqual(1)
+    .modify({ attemptCount: 0, lastError: null })
+}
