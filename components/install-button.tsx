@@ -57,6 +57,7 @@ export function InstallButton() {
 
   if (isInstalled) return null
   if (!isIOS && !deferredPrompt) return null
+  if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) return null
 
   async function handleInstall() {
     deferredPrompt.prompt()

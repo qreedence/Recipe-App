@@ -7,7 +7,7 @@ import { useRecipes } from '@/hooks/use-recipes'
 import { SearchBar } from '@/components/search-bar'
 import { FilterChips } from '@/components/filter-chips'
 import { RecipeCard } from '@/components/recipe-card'
-import { SettingsMenu } from './settings-menu'
+import { UserMenu } from './auth/user-menu'
 import { InstallButton } from '@/components/install-button'
 
 type SortOption = 'recent' | 'rating' | 'kcal-asc' | 'kcal-desc' | 'protein-desc' | 'alpha'
@@ -162,7 +162,7 @@ export function BrowsePage() {
             </h1>
             <div className="flex items-center gap-2">
               <InstallButton />
-              <SettingsMenu />
+              <UserMenu variant="compact" />
             </div>
           </div>
           <div className="flex items-center gap-2">

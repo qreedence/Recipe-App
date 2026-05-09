@@ -1,5 +1,5 @@
 import useSWR from 'swr'
-import { getMealTypeConfigs, saveMealTypeConfig } from '@/lib/storage'
+import { getMealTypeConfigs, saveMealTypeConfig } from '@/lib/sync/meal-type-config-sync'
 import { ALL_MEAL_TYPES, DEFAULT_MEAL_TYPES, MealType, MealTypeConfig } from '@/lib/types'
 
 export function useMealTypeConfig() {

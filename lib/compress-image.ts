@@ -21,7 +21,7 @@ export function compressImage(dataUrl: string): Promise<string> {
       }
 
       ctx.drawImage(img, 0, 0, width, height)
-      resolve(canvas.toDataURL("image/webp", 0.75))
+      resolve(canvas.toDataURL("image/webp", 0.85))
     }
     img.onerror = () => reject(new Error("Failed to load image"))
     img.src = dataUrl

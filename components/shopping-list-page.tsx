@@ -325,7 +325,7 @@ export function ShoppingListPage() {
       name: newItemName.trim(),
       amount: newItemAmount.trim(),
       checked: false,
-      category: newItemCategory,
+      category: newItemCategory ?? lookupCategory(newItemName.trim()),
       recipeId: null,
       recipeTitle: null,
       createdAt: Date.now(),

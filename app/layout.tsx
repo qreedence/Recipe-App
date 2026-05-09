@@ -7,6 +7,7 @@ import './globals.css'
 import { ExportReminder } from '@/components/export-reminder'
 import { LayoutShell } from '@/components/layout-shell'
 import { ImageMigration } from '@/components/image-migration'
+import { SyncProvider } from '@/components/sync-provider'
 
 const _inter = Inter({ subsets: ["latin"] })
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
@@ -54,6 +55,7 @@ export default function RootLayout({
         <Toaster position="top-center" richColors duration={2000} />
         <ImageMigration/>
         <ExportReminder />
+        <SyncProvider />
         <Analytics />
       </body>
     </html>

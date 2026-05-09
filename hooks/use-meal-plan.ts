@@ -4,7 +4,7 @@ import {
   saveMealPlanEntry,
   deleteMealPlanEntry,
   clearMealPlanEntries,
-} from '@/lib/storage'
+} from '@/lib/sync/meal-plan-sync'
 import { MealPlanEntry } from '@/lib/types'
 
 export function useMealPlan(weekDates: string[]) {
