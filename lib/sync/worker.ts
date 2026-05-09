@@ -18,11 +18,24 @@ export function registerSyncDispatcher(
 
 const MAX_ATTEMPTS = 5
 
-let draining = false
+export type SyncError = {
+  table: SyncableTable
+  operation: string
+  rowKey: string
+  message: string
+}
 
-// Drains the pending-writes queue serially. Returns when the queue is empty,
-// when we hit an item with no dispatcher, or when we hit a failure we want to
-// retry later. Safe to call concurrently — duplicate calls are deduped.
+let draining = false
+const syncErrors: SyncError[] = []
+
+export function getSyncErrors(): SyncError[] {
+  return syncErrors
+}
+
+export function clearSyncErrors(): void {
+  syncErrors.length = 0
+}
+
 export async function drain(): Promise<void> {
   if (draining) return
   if (typeof navigator !== 'undefined' && !navigator.onLine) return
@@ -36,14 +49,16 @@ export async function drain(): Promise<void> {
     const queue = await peekAll()
     for (const write of queue) {
       const dispatcher = dispatchers.get(write.table)
-      if (!dispatcher) {
-        // No handler registered yet — skip the rest of the queue; a later drain
-        // will pick it up once the per-entity module registers.
-        break
-      }
+      if (!dispatcher) continue
       if (write.attemptCount >= MAX_ATTEMPTS) {
-        // Give up; later retries will re-enqueue if the user repeats the op.
-        // The failed row stays in the queue for diagnostics.
+        if (write.lastError) {
+          syncErrors.push({
+            table: write.table,
+            operation: write.operation,
+            rowKey: write.rowKey,
+            message: write.lastError,
+          })
+        }
         continue
       }
       try {
@@ -52,8 +67,6 @@ export async function drain(): Promise<void> {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
         if (write.id !== undefined) await markFailed(write.id, message)
-        // Stop the drain — preserve order, retry later.
-        break
       }
     }
   } finally {
