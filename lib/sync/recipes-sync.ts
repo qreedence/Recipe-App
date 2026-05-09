@@ -26,7 +26,7 @@ function recipeToRow(recipe: Recipe, userId: string): TablesInsert<'recipes'> {
     id: recipe.id,
     user_id: userId,
     title: recipe.title,
-    portions: recipe.portions,
+    portions: Math.round(recipe.portions),
     is_favorite: recipe.isFavorite,
     ingredients: recipe.ingredients,
     steps: recipe.steps,

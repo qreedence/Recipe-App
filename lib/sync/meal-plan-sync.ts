@@ -12,7 +12,6 @@ import { drain, registerSyncDispatcher, type SyncDispatcher } from './worker'
 
 function entryToRow(entry: MealPlanEntry, userId: string): TablesInsert<'meal_plan_entries'> {
   return {
-    id: entry.id,
     user_id: userId,
     date: entry.date,
     meal_type: entry.mealType,
@@ -25,7 +24,7 @@ function entryToRow(entry: MealPlanEntry, userId: string): TablesInsert<'meal_pl
 
 function rowToEntry(row: Tables<'meal_plan_entries'>): MealPlanEntry {
   return {
-    id: row.id,
+    id: `${row.date}_${row.meal_type}`,
     date: row.date,
     mealType: row.meal_type,
     recipeId: row.recipe_id,
@@ -41,16 +40,29 @@ function rowToEntry(row: Tables<'meal_plan_entries'>): MealPlanEntry {
 
 const dispatcher: SyncDispatcher = async (write) => {
   const supabase = createClient()
+  const userId = getCurrentUserId()
+  if (!userId) throw new Error('not authenticated')
 
   if (write.operation === 'upsert') {
     if (!write.payload) throw new Error('meal_plan_entries upsert missing payload')
-    const { error } = await supabase.from('meal_plan_entries').upsert(write.payload as TablesInsert<'meal_plan_entries'>)
+    const { error } = await supabase
+      .from('meal_plan_entries')
+      .upsert(write.payload as TablesInsert<'meal_plan_entries'>, {
+        onConflict: 'user_id,date,meal_type',
+      })
     if (error) throw new Error(error.message)
     return
   }
 
   if (write.operation === 'delete') {
-    const { error } = await supabase.from('meal_plan_entries').delete().eq('id', write.rowKey)
+    const [date, ...rest] = write.rowKey.split('_')
+    const mealType = rest.join('_')
+    const { error } = await supabase
+      .from('meal_plan_entries')
+      .delete()
+      .eq('user_id', userId)
+      .eq('date', date)
+      .eq('meal_type', mealType)
     if (error) throw new Error(error.message)
     return
   }
