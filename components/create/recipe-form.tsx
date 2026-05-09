@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Recipe, Ingredient, Macros, EMPTY_MACROS, RecipeDraft } from '@/lib/types'
 import { saveRecipeAndRevalidate } from '@/hooks/use-recipes'
+import { uploadImage, isBase64Image } from '@/lib/upload-image'
 import { StepIngredients } from './step-ingredients'
 import { StepInstructions } from './step-instructions'
 import { StepImage } from './step-image'
@@ -135,13 +136,25 @@ export function RecipeForm({
       return
     }
 
+    const recipeId = initialData?.id ?? crypto.randomUUID()
+
+    let finalImage = image
+    if (isBase64Image(image)) {
+      try {
+        finalImage = await uploadImage(image!, recipeId)
+      } catch {
+        toast.error('Failed to upload image — saving without it')
+        finalImage = null
+      }
+    }
+
     const recipe: Recipe = {
-      id: initialData?.id ?? crypto.randomUUID(),
+      id: recipeId,
       title: title.trim(),
       portions: Math.max(1, portions),
       ingredients: ingredients.filter((i) => i.name.trim()),
       steps: steps.filter((s) => s.trim()),
-      image,
+      image: finalImage,
       macros: macroMode === 'auto' ? calcAutoMacros() : manualMacros,
       macroMode,
       tags,

@@ -1,5 +1,5 @@
 import useSWR, { mutate as globalMutate } from "swr"
-import { getRecipes, getRecipe, saveRecipe as storageSave, updateRecipe as storageUpdate, deleteRecipe as storageDelete } from "@/lib/storage"
+import { getRecipes, getRecipe, saveRecipe as storageSave, updateRecipe as storageUpdate, deleteRecipe as storageDelete } from "@/lib/sync/recipes-sync"
 import { Recipe } from "@/lib/types"
 
 export function useRecipes() {
