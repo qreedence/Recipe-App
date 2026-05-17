@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import type { PendingWrite, SyncOperation } from './types'
-import type { SyncableTable } from '@/lib/supabase/database.types'
+import type { SyncableTable } from '@/lib/supabase/database'
 
 export async function enqueue(
   table: SyncableTable,

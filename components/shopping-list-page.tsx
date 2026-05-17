@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Trash2, ShoppingCart, Check, Tag, X, Pencil } from "lucide-react"
+import { Plus, Trash2, ShoppingCart, Check, Tag, X, Pencil, Users } from "lucide-react"
 import { ShoppingItem, GROCERY_CATEGORIES } from "@/lib/types"
 import {
   useShoppingItems,
@@ -11,6 +11,10 @@ import {
   clearCheckedAndRevalidate,
   clearAllAndRevalidate,
 } from "@/hooks/use-shopping"
+import { useActiveList } from "@/hooks/use-shopping-lists"
+import { useUser } from "@/hooks/use-user"
+import { ShoppingListSwitcher } from "@/components/shopping-list-switcher"
+import { ShoppingListShareDialog } from "@/components/shopping-list-share-dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -283,11 +287,14 @@ function handleKeyDown(e: React.KeyboardEvent) {
 }
 
 export function ShoppingListPage() {
-  const { items, isLoading } = useShoppingItems()
+  const { user } = useUser()
+  const { activeListId, activeList } = useActiveList()
+  const { items, isLoading } = useShoppingItems(activeListId ?? undefined)
   const [newItemName, setNewItemName] = useState("")
   const [newItemAmount, setNewItemAmount] = useState("")
   const [newItemCategory, setNewItemCategory] = useState<string | null>(null)
   const [showNewItemCategoryPicker, setShowNewItemCategoryPicker] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const checkedCount = items.filter((i) => i.checked).length
@@ -331,7 +338,7 @@ export function ShoppingListPage() {
       createdAt: Date.now(),
     }
 
-    await addItemsAndRevalidate([item])
+    await addItemsAndRevalidate([item], activeListId ?? undefined)
     setNewItemName("");
     setNewItemAmount("");
     setNewItemCategory(null);
@@ -353,51 +360,67 @@ export function ShoppingListPage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <h1 className="text-xl font-bold text-foreground lg:hidden">Shopping List</h1>
-              <h1 className="text-xl font-bold text-foreground hidden lg:block">Shopping List</h1>
+            <div className="min-w-0 flex-1">
+              <ShoppingListSwitcher />
               {totalCount > 0 && (
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {checkedCount} of {totalCount} items checked
                 </p>
               )}
             </div>
-            {totalCount > 0 && (
-              <div className="flex items-center gap-2">
-                {checkedCount > 0 && (
-                  <button
-                    onClick={clearCheckedAndRevalidate}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-accent"
-                  >
-                    Clear checked
-                  </button>
-                )}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
+            <div className="flex items-center gap-2">
+              {activeList && (
+                <button
+                  onClick={() => setShowShare(true)}
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  aria-label="Share list"
+                >
+                  <Users className="h-4 w-4" />
+                </button>
+              )}
+              {totalCount > 0 && (
+                <>
+                  {checkedCount > 0 && (
                     <button
-                      className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      aria-label="Clear all items"
+                      onClick={() => clearCheckedAndRevalidate(activeListId ?? undefined)}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-accent"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      Clear checked
                     </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Clear shopping list?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will remove all {totalCount} items from your shopping list.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={clearAllAndRevalidate}>
-                        Clear All
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        aria-label="Clear all items"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Clear shopping list?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove all {totalCount} items from your shopping list.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => clearAllAndRevalidate(activeListId ?? undefined)}>
+                          Clear All
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
+            </div>
+            <ShoppingListShareDialog
+              open={showShare}
+              onOpenChange={setShowShare}
+              list={activeList}
+              currentUserId={user?.id ?? null}
+            />
           </div>
 
           {/* Add item form */}

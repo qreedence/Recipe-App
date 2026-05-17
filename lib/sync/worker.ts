@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import type { SyncableTable } from '@/lib/supabase/database.types'
+import type { SyncableTable } from '@/lib/supabase/database'
 import { markFailed, peekAll, remove } from './queue'
 import type { PendingWrite } from './types'
 
