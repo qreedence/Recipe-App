@@ -11,10 +11,17 @@ import { createClient } from '@/lib/supabase/client'
 
 export function SignupForm() {
   const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  const [usernameTouched, setUsernameTouched] = useState(false)
+
+  const isUsernameValid = /^[a-zA-Z0-9][a-zA-Z0-9_-]{1,28}[a-zA-Z0-9]$/.test(username)
+  const usernameError = usernameTouched && username && !isUsernameValid
+    ? 'Must be 3–30 characters. Only letters, numbers, hyphens, and underscores.'
+    : null
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -25,20 +32,47 @@ export function SignupForm() {
       return
     }
 
+    if (!username || !isUsernameValid) {
+      setUsernameTouched(true)
+      setError('Please enter a valid username')
+      return
+    }
+
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+
+    const { data: taken } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .ilike('username', username)
+      .single()
+
+    if (taken) {
+      setError('Username is already taken')
+      setLoading(false)
+      return
+    }
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: { username },
       },
     })
 
-    if (error) {
-      setError(error.message)
+    if (signUpError) {
+      setError(signUpError.message)
       setLoading(false)
       return
+    }
+
+    if (data.user) {
+      await supabase.from('profiles').insert({
+        user_id: data.user.id,
+        username,
+      })
     }
 
     setSubmitted(true)
@@ -77,6 +111,24 @@ export function SignupForm() {
           onChange={(e) => setEmail(e.target.value)}
           disabled={loading}
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="username">Username</Label>
+        <Input
+          id="username"
+          type="text"
+          autoComplete="username"
+          required
+          placeholder="e.g. chefmom"
+          value={username}
+          onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+          onBlur={() => setUsernameTouched(true)}
+          disabled={loading}
+        />
+        {usernameError && (
+          <p className="text-xs text-destructive">{usernameError}</p>
+        )}
+        <p className="text-xs text-muted-foreground">This is your public profile URL.</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>

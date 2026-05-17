@@ -6,9 +6,10 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isDetailPage = pathname.startsWith("/recipe/")
   const isAuthPage = pathname === "/login" || pathname === "/signup"
-  const skipSidebar = isDetailPage || isAuthPage
+  const isProfilePage = pathname.startsWith("/u/")
+  const skipSidebar = isDetailPage || isProfilePage || isAuthPage
   return (
-    <div className={skipSidebar ? "" : "lg:pl-56"}>
+    <div className={skipSidebar ? "" : "lg:pl-60"}>
       {children}
     </div>
   )

@@ -10,6 +10,9 @@ import { RecipeCard } from '@/components/recipe-card'
 import { UserMenu } from './auth/user-menu'
 import { InstallButton } from '@/components/install-button'
 import { ShareImportButton, ClipboardShareDetector } from '@/components/share-import-dialog'
+import { FollowingTab } from '@/components/following-tab'
+import { ProfileHeader } from '@/components/profile-header'
+import { useUser } from '@/hooks/use-user'
 
 type SortOption = 'recent' | 'rating' | 'kcal-asc' | 'kcal-desc' | 'protein-desc' | 'alpha'
 
@@ -92,6 +95,8 @@ function SortDropdown({
 
 export function BrowsePage() {
   const { recipes, isLoading } = useRecipes()
+  const { user, loading: userLoading } = useUser()
+  const [tab, setTab] = useState<'mine' | 'following'>('mine')
   const [search, setSearch] = useState('')
   const [filterTags, setFilterTags] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
@@ -203,8 +208,41 @@ export function BrowsePage() {
         </div>
       </header>
 
+      {/* Tabs */}
+      {(user || userLoading) && (
+        <div className="max-w-3xl mx-auto px-4 pt-3">
+          <div className="flex gap-1 bg-muted rounded-lg p-1">
+            <button
+              onClick={() => setTab('mine')}
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                tab === 'mine'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              My recipes
+            </button>
+            <button
+              onClick={() => setTab('following')}
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                tab === 'following'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Following
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <main className="max-w-3xl mx-auto px-4 py-6">
+        {(user || userLoading) && tab === 'mine' && <ProfileHeader />}
+        {tab === 'following' && user ? (
+          <FollowingTab />
+        ) : (
+        <>
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -235,9 +273,13 @@ export function BrowsePage() {
             ))}
           </div>
         )}
-        <p className="py-12">
-          Found <span className="font-bold">{filtered.length}</span> recipes
-        </p>
+        {filtered.length > 0 && (
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            Found <span className="font-bold">{filtered.length}</span> recipes
+          </p>
+        )}
+        </>
+        )}
       </main>
       <ClipboardShareDetector />
     </div>

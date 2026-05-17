@@ -1,29 +1,62 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import type { User } from '@supabase/supabase-js'
+import useSWR, { mutate as globalMutate } from 'swr'
 import { createClient } from '@/lib/supabase/client'
 
+interface UserProfile {
+  user: User
+  username: string
+  avatarUrl: string | null
+  isPublic: boolean
+}
+
+async function fetchUser(): Promise<UserProfile | null> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username, avatar_url, is_public')
+    .eq('user_id', user.id)
+    .single()
+
+  return {
+    user,
+    username: profile?.username ?? '',
+    avatarUrl: profile?.avatar_url ?? null,
+    isPublic: profile?.is_public ?? false,
+  }
+}
+
+const KEY = 'current-user'
+
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useSWR(KEY, fetchUser, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 60000,
+  })
 
   useEffect(() => {
     const supabase = createClient()
-
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user)
-      setLoading(false)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      globalMutate(KEY)
     })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
     return () => subscription.unsubscribe()
   }, [])
 
-  return { user, loading }
+  return {
+    user: data?.user ?? null,
+    username: data?.username ?? '',
+    avatarUrl: data?.avatarUrl ?? null,
+    isPublic: data?.isPublic ?? false,
+    loading: isLoading,
+  }
+}
+
+export function revalidateUser() {
+  return globalMutate(KEY)
 }

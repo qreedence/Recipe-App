@@ -34,9 +34,10 @@ interface SharedRecipePreviewProps {
     rating: number | null
     created_at: number
   }
+  backHref?: string
 }
 
-export function SharedRecipePreview({ recipe: snapshot }: SharedRecipePreviewProps) {
+export function SharedRecipePreview({ recipe: snapshot, backHref = '/' }: SharedRecipePreviewProps) {
   const router = useRouter()
   const { user } = useUser()
   const [saved, setSaved] = useState(false)
@@ -83,11 +84,12 @@ export function SharedRecipePreview({ recipe: snapshot }: SharedRecipePreviewPro
   }
 
   function handleNavigate(href: string) {
-    if (!saved) {
-      setPendingNavigation(href)
-      setShowLeaveDialog(true)
-      return
-    }
+    // TODO: refine leave-without-saving guard logic
+    // if (!saved) {
+    //   setPendingNavigation(href)
+    //   setShowLeaveDialog(true)
+    //   return
+    // }
     router.push(href)
   }
 
@@ -206,7 +208,7 @@ export function SharedRecipePreview({ recipe: snapshot }: SharedRecipePreviewPro
             {imageBlock}
           </div>
           <button
-            onClick={() => handleNavigate('/')}
+            onClick={() => handleNavigate(backHref)}
             className="absolute top-4 left-4 p-2 rounded-full bg-foreground/50 text-background hover:bg-foreground/70 transition-colors"
             aria-label="Go back"
           >
@@ -224,7 +226,7 @@ export function SharedRecipePreview({ recipe: snapshot }: SharedRecipePreviewPro
       <div className="hidden lg:flex max-w-6xl mx-auto px-6 py-6 gap-8">
         <div className="shrink-0 pt-1">
           <button
-            onClick={() => handleNavigate('/')}
+            onClick={() => handleNavigate(backHref)}
             className="flex items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             aria-label="Go back"
           >

@@ -8,6 +8,7 @@ import { ExportReminder } from '@/components/export-reminder'
 import { LayoutShell } from '@/components/layout-shell'
 import { ImageMigration } from '@/components/image-migration'
 import { SyncProvider } from '@/components/sync-provider'
+import { UsernameSetupDialog } from '@/components/auth/username-setup-dialog'
 
 const _inter = Inter({ subsets: ["latin"] })
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
@@ -56,6 +57,7 @@ export default function RootLayout({
         <ImageMigration/>
         <ExportReminder />
         <SyncProvider />
+        <UsernameSetupDialog />
         <Analytics />
       </body>
     </html>
