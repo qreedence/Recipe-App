@@ -55,13 +55,48 @@ export function StepIngredients({
     updated[index] = { ...updated[index], [field]: value }
     setIngredients(updated)
   }
+
+  function updateQuantity(index: number, newQuantity: number | null) {
+    const updated = [...ingredients]
+    const ing = updated[index]
+
+    if (
+      newQuantity !== null &&
+      newQuantity > 0 &&
+      ing.baseMacros &&
+      ing.macrosPer &&
+      ing.macrosPer > 0
+    ) {
+      const ratio = newQuantity / ing.macrosPer
+      updated[index] = {
+        ...ing,
+        quantity: newQuantity,
+        macros: {
+          kcal: Math.round(ing.baseMacros.kcal * ratio * 10) / 10,
+          carbs: Math.round(ing.baseMacros.carbs * ratio * 10) / 10,
+          fat: Math.round(ing.baseMacros.fat * ratio * 10) / 10,
+          protein: Math.round(ing.baseMacros.protein * ratio * 10) / 10,
+        },
+      }
+    } else {
+      updated[index] = { ...ing, quantity: newQuantity }
+    }
+
+    setIngredients(updated)
+  }
   function removeIngredient(index: number) {
     setIngredients(ingredients.filter((_, i) => i !== index))
   }
 
   function saveMacros(index: number, macros: Macros) {
     const updated = [...ingredients]
-    updated[index] = { ...updated[index], macros }
+    const ing = updated[index]
+    updated[index] = {
+      ...ing,
+      macros,
+      baseMacros: { ...macros },
+      macrosPer: ing.quantity,
+    }
     setIngredients(updated)
   }
 
@@ -126,7 +161,7 @@ export function StepIngredients({
                   type="number"
                   value={ing.quantity ?? ''}
                   onChange={(e) =>
-                    updateField(i, 'quantity', e.target.value ? parseFloat(e.target.value) : null)
+                    updateQuantity(i, e.target.value ? parseFloat(e.target.value) : null)
                   }
                   placeholder="Qty"
                   className="w-20 shrink-0"
