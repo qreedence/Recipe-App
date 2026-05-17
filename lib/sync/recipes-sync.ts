@@ -12,7 +12,7 @@ import { uploadImage, isBase64Image } from '@/lib/upload-image'
 import type {
   Tables,
   TablesInsert,
-} from '@/lib/supabase/database.types'
+} from '@/lib/supabase/database'
 import type { Recipe } from '@/lib/types'
 import { enqueue, peekAll, hasPendingForTable } from './queue'
 import { drain, registerSyncDispatcher, type SyncDispatcher } from './worker'

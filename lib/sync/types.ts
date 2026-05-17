@@ -1,4 +1,4 @@
-import type { SyncableTable } from '@/lib/supabase/database.types'
+import type { SyncableTable } from '@/lib/supabase/database'
 
 export type SyncOperation = 'upsert' | 'delete'
 

@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { createClient } from '@/lib/supabase/client'
 import { getCurrentUserId } from '@/lib/supabase/session'
-import type { TablesInsert, Tables } from '@/lib/supabase/database.types'
+import type { TablesInsert, Tables } from '@/lib/supabase/database'
 import type { MealPlanEntry } from '@/lib/types'
 import { enqueue, peekAll, hasPendingForTable } from './queue'
 import { drain, registerSyncDispatcher, type SyncDispatcher } from './worker'
