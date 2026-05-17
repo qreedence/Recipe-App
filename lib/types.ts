@@ -39,6 +39,8 @@ export interface Ingredient {
   quantity: number | null
   unit: string // IngredientUnit or freeform
   macros: Macros | null
+  macrosPer?: number | null
+  baseMacros?: Macros | null
   originalAmount?: string // migration artifact
 }
 
