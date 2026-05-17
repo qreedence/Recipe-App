@@ -205,6 +205,11 @@ export function BrowsePage() {
 
       {/* Content */}
       <main className="max-w-3xl mx-auto px-4 py-6">
+        {filtered.length > 0 && (
+          <p className="text-sm text-muted-foreground mb-4">
+            Found <span className="font-bold">{filtered.length}</span> recipes
+          </p>
+        )}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -235,9 +240,6 @@ export function BrowsePage() {
             ))}
           </div>
         )}
-        <p className="py-12">
-          Found <span className="font-bold">{filtered.length}</span> recipes
-        </p>
       </main>
       <ClipboardShareDetector />
     </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LogIn, LogOut, User as UserIcon } from 'lucide-react'
+import { LogIn, LogOut, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   DropdownMenu,
@@ -76,11 +76,11 @@ export function UserMenu({ variant = 'sidebar' }: { variant?: 'sidebar' | 'compa
           className="p-2.5 rounded-lg border bg-card text-foreground border-border hover:bg-accent transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Account menu"
         >
-          <UserIcon className="h-4 w-4" />
+          <Settings className="h-4 w-4" />
         </DropdownMenuTrigger>
       ) : (
         <DropdownMenuTrigger className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <UserIcon className="h-5 w-5" strokeWidth={2} />
+          <Settings className="h-5 w-5" strokeWidth={2} />
           <span className="truncate">{displayName}</span>
         </DropdownMenuTrigger>
       )}
@@ -93,8 +93,8 @@ export function UserMenu({ variant = 'sidebar' }: { variant?: 'sidebar' | 'compa
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/account">
-            <UserIcon className="h-4 w-4" />
-            Account
+            <Settings className="h-4 w-4" />
+            Settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSignOut}>

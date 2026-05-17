@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { BookOpen, CalendarDays, PlusCircle, ShoppingCart } from "lucide-react"
-import { SettingsMenu } from "./settings-menu"
 import { UserMenu } from "./auth/user-menu"
 
 const NAV_ITEMS = [
@@ -18,9 +17,10 @@ export function AppNav() {
 
   // Hide nav on recipe detail pages — the detail view has its own back nav
   const isDetailPage = pathname.startsWith("/recipe/")
+  const isProfilePage = pathname.startsWith("/u/")
   const isAuthPage = pathname === "/login" || pathname === "/signup"
 
-  if (isDetailPage || isAuthPage) return null
+  if (isDetailPage || isProfilePage || isAuthPage) return null
 
   return (
     <>
@@ -84,7 +84,6 @@ export function AppNav() {
         </div>
         <div className="px-3 py-4 border-t border-border space-y-1">
           <UserMenu />
-          <SettingsMenu variant="sidebar" />
         </div>
       </aside>
     </>

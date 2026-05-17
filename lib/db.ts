@@ -57,4 +57,8 @@ db.version(6).stores({
   pendingWrites: '++id, table, createdAt',
 })
 
+db.version(7).stores({
+  pendingWrites: '++id, table, createdAt, attemptCount',
+})
+
 export { db }
