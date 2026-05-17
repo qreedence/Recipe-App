@@ -16,7 +16,7 @@ export default async function AccountPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('username, is_public')
+    .select('username, is_public, avatar_url')
     .eq('user_id', user.id)
     .single()
 
@@ -25,6 +25,7 @@ export default async function AccountPage() {
       email={user.email ?? ''}
       initialUsername={profile?.username ?? ''}
       initialIsPublic={profile?.is_public ?? false}
+      initialAvatarUrl={profile?.avatar_url ?? null}
     />
   )
 }

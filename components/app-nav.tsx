@@ -53,7 +53,7 @@ export function AppNav() {
 
       {/* Desktop sidebar */}
       <aside
-        className="hidden lg:flex fixed left-0 top-0 bottom-0 z-40 w-56 flex-col bg-card border-r border-border"
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 z-40 w-60 flex-col bg-card border-r border-border"
         role="navigation"
         aria-label="Main navigation"
       >

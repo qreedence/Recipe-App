@@ -16,9 +16,11 @@ export function SignupForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  const [usernameTouched, setUsernameTouched] = useState(false)
 
-  const usernameError = username && !/^[a-zA-Z0-9][a-zA-Z0-9_-]{1,28}[a-zA-Z0-9]$/.test(username)
-    ? 'Letters, numbers, hyphens, underscores. 3–30 chars.'
+  const isUsernameValid = /^[a-zA-Z0-9][a-zA-Z0-9_-]{1,28}[a-zA-Z0-9]$/.test(username)
+  const usernameError = usernameTouched && username && !isUsernameValid
+    ? 'Must be 3–30 characters. Only letters, numbers, hyphens, and underscores.'
     : null
 
   async function onSubmit(e: React.FormEvent) {
@@ -30,7 +32,8 @@ export function SignupForm() {
       return
     }
 
-    if (!username || usernameError) {
+    if (!username || !isUsernameValid) {
+      setUsernameTouched(true)
       setError('Please enter a valid username')
       return
     }
@@ -116,9 +119,10 @@ export function SignupForm() {
           type="text"
           autoComplete="username"
           required
-          placeholder="e.g. eden"
+          placeholder="e.g. chefmom"
           value={username}
           onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+          onBlur={() => setUsernameTouched(true)}
           disabled={loading}
         />
         {usernameError && (

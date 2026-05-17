@@ -84,11 +84,12 @@ export function SharedRecipePreview({ recipe: snapshot, backHref = '/' }: Shared
   }
 
   function handleNavigate(href: string) {
-    if (!saved) {
-      setPendingNavigation(href)
-      setShowLeaveDialog(true)
-      return
-    }
+    // TODO: refine leave-without-saving guard logic
+    // if (!saved) {
+    //   setPendingNavigation(href)
+    //   setShowLeaveDialog(true)
+    //   return
+    // }
     router.push(href)
   }
 

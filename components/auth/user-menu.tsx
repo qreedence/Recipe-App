@@ -15,22 +15,36 @@ import {
 import { useUser } from '@/hooks/use-user'
 import { createClient } from '@/lib/supabase/client'
 
+function Avatar({ src, name, size }: { src: string | null; name: string; size: 'sm' | 'md' }) {
+  const dim = size === 'sm' ? 'w-8 h-8' : 'w-9 h-9'
+  const text = size === 'sm' ? 'text-xs' : 'text-sm'
+
+  if (src) {
+    return <img src={src} alt={name} className={`${dim} rounded-full object-cover`} />
+  }
+  return (
+    <div className={`${dim} rounded-full bg-primary/10 text-primary flex items-center justify-center ${text} font-bold`}>
+      {name[0]?.toUpperCase() ?? '?'}
+    </div>
+  )
+}
+
 export function UserMenu({ variant = 'sidebar' }: { variant?: 'sidebar' | 'compact' }) {
   const router = useRouter()
-  const { user, loading } = useUser()
+  const { user, username, avatarUrl, loading } = useUser()
 
   const isCompact = variant === 'compact'
 
   if (loading) {
     if (isCompact) {
-      return <div className="h-9 w-9 rounded-lg bg-accent animate-pulse" />
+      return <div className="h-8 w-8 rounded-full bg-accent animate-pulse" />
     }
     return (
       <div
         aria-hidden
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground"
       >
-        <div className="h-5 w-5 rounded-full bg-accent animate-pulse" />
+        <div className="h-9 w-9 rounded-full bg-accent animate-pulse" />
         <div className="h-3 w-20 rounded bg-accent animate-pulse" />
       </div>
     )
@@ -67,20 +81,20 @@ export function UserMenu({ variant = 'sidebar' }: { variant?: 'sidebar' | 'compa
     router.refresh()
   }
 
-  const displayName = user.email ?? 'Account'
+  const displayName = username || user.email || 'Account'
 
   return (
     <DropdownMenu>
       {isCompact ? (
         <DropdownMenuTrigger
-          className="p-2.5 rounded-lg border bg-card text-foreground border-border hover:bg-accent transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Account menu"
         >
-          <Settings className="h-4 w-4" />
+          <Avatar src={avatarUrl} name={displayName} size="sm" />
         </DropdownMenuTrigger>
       ) : (
         <DropdownMenuTrigger className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <Settings className="h-5 w-5" strokeWidth={2} />
+          <Avatar src={avatarUrl} name={displayName} size="md" />
           <span className="truncate">{displayName}</span>
         </DropdownMenuTrigger>
       )}

@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { BookOpen, Drumstick, Flame } from 'lucide-react'
+import { ArrowLeft, BookOpen, Drumstick, Flame } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { ProfileHeader } from '@/components/profile-header'
 
 type Props = {
   params: Promise<{ username: string }>
@@ -35,7 +36,7 @@ export default async function ProfilePage({ params }: Props) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('user_id, username, is_public')
+    .select('user_id, username, is_public, avatar_url')
     .ilike('username', username)
     .single()
 
@@ -82,14 +83,15 @@ export default async function ProfilePage({ params }: Props) {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
-              {profile.username[0].toUpperCase()}
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">{profile.username}</h1>
-              <p className="text-xs text-muted-foreground">
-                {recipes?.length ?? 0} {(recipes?.length ?? 0) === 1 ? 'recipe' : 'recipes'}
-              </p>
+            <Link
+              href="/"
+              className="flex items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <div className="flex-1 min-w-0">
+              <ProfileHeader userId={profile.user_id} readOnly compact />
             </div>
           </div>
         </div>

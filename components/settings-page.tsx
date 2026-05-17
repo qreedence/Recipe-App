@@ -1,25 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Loader2, Check } from 'lucide-react'
+import { ArrowLeft, Loader2, Check, Camera } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SignOutButton } from '@/components/auth/sign-out-button'
 import { createClient } from '@/lib/supabase/client'
+import { revalidateUser } from '@/hooks/use-user'
 
 interface SettingsPageProps {
   email: string
   initialUsername: string
   initialIsPublic: boolean
+  initialAvatarUrl: string | null
 }
 
-export function SettingsPage({ email, initialUsername, initialIsPublic }: SettingsPageProps) {
+export function SettingsPage({ email, initialUsername, initialIsPublic, initialAvatarUrl }: SettingsPageProps) {
   const [username, setUsername] = useState(initialUsername)
   const [isPublic, setIsPublic] = useState(initialIsPublic)
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl)
   const [saving, setSaving] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarRef = useRef<HTMLInputElement>(null)
 
   const usernameError = username && !/^[a-zA-Z0-9][a-zA-Z0-9_-]{1,28}[a-zA-Z0-9]$/.test(username)
     ? 'Letters, numbers, hyphens, underscores. 3–30 chars.'
@@ -60,6 +65,7 @@ export function SettingsPage({ email, initialUsername, initialIsPublic }: Settin
 
     toast.success('Settings saved')
     setSaving(false)
+    revalidateUser()
   }
 
   return (
@@ -74,9 +80,61 @@ export function SettingsPage({ email, initialUsername, initialIsPublic }: Settin
       <h1 className="text-2xl font-semibold mb-6">Settings</h1>
 
       <div className="space-y-6">
-        <div>
-          <Label className="text-sm text-muted-foreground">Email</Label>
-          <p className="text-sm mt-1">{email}</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => avatarRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative shrink-0 group"
+            aria-label="Change avatar"
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={username} className="w-20 h-20 rounded-full object-cover" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xl font-bold">
+                {username?.[0]?.toUpperCase() ?? '?'}
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+              <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <input
+              ref={avatarRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                e.target.value = ''
+                setUploadingAvatar(true)
+                const formData = new FormData()
+                formData.append('file', file)
+                try {
+                  const res = await fetch('/api/avatar/upload', { method: 'POST', body: formData })
+                  if (!res.ok) throw new Error()
+                  const { url } = await res.json()
+                  setAvatarUrl(url)
+                  toast.success('Avatar updated!')
+                  revalidateUser()
+                } catch {
+                  toast.error('Failed to upload avatar')
+                } finally {
+                  setUploadingAvatar(false)
+                }
+              }}
+            />
+          </button>
+          <div>
+            <p className="text-sm font-medium text-foreground">{username}</p>
+            <p className="text-xs text-muted-foreground">{email}</p>
+            <button
+              onClick={() => avatarRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="text-xs text-primary hover:underline mt-1"
+            >
+              {uploadingAvatar ? 'Uploading...' : 'Change photo'}
+            </button>
+          </div>
         </div>
 
         <div className="space-y-2">

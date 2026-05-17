@@ -21,3 +21,11 @@ export function imageKey(userId: string, recipeId: string): string {
 export function publicImageUrl(userId: string, recipeId: string): string {
   return `${R2_PUBLIC_URL}/${imageKey(userId, recipeId)}`
 }
+
+export function avatarKey(userId: string): string {
+  return `${env}/${userId}/avatar.webp`
+}
+
+export function publicAvatarUrl(userId: string): string {
+  return `${R2_PUBLIC_URL}/${avatarKey(userId)}`
+}

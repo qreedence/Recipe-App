@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { useUser } from '@/hooks/use-user'
+import { useUser, revalidateUser } from '@/hooks/use-user'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 
@@ -22,6 +22,7 @@ export function UsernameSetupDialog() {
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [touched, setTouched] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -37,15 +38,17 @@ export function UsernameSetupDialog() {
       })
   }, [user])
 
-  const usernameError = username && !/^[a-zA-Z0-9][a-zA-Z0-9_-]{1,28}[a-zA-Z0-9]$/.test(username)
-    ? 'Letters, numbers, hyphens, underscores. 3–30 chars.'
+  const isUsernameValid = /^[a-zA-Z0-9][a-zA-Z0-9_-]{1,28}[a-zA-Z0-9]$/.test(username)
+  const usernameError = touched && username && !isUsernameValid
+    ? 'Must be 3–30 characters. Only letters, numbers, hyphens, and underscores.'
     : null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
 
-    if (!username || usernameError) {
+    if (!username || !isUsernameValid) {
+      setTouched(true)
       setError('Please enter a valid username')
       return
     }
@@ -79,6 +82,7 @@ export function UsernameSetupDialog() {
     setOpen(false)
     setLoading(false)
     toast.success(`Username set to @${username}`)
+    revalidateUser()
   }
 
   return (
@@ -96,9 +100,10 @@ export function UsernameSetupDialog() {
             <Input
               id="setup-username"
               type="text"
-              placeholder="e.g. eden"
+              placeholder="e.g. chefmom"
               value={username}
               onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+              onBlur={() => setTouched(true)}
               disabled={loading}
               autoFocus
             />
@@ -109,7 +114,7 @@ export function UsernameSetupDialog() {
               <p className="text-sm text-destructive" role="alert">{error}</p>
             )}
           </div>
-          <Button type="submit" className="w-full" disabled={loading || !username || !!usernameError}>
+          <Button type="submit" className="w-full" disabled={loading || !username || !isUsernameValid}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Set username'}
           </Button>
         </form>
