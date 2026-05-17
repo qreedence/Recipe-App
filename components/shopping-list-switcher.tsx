@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronDown, Plus, Pencil, Trash2, Check } from 'lucide-react'
+import { ChevronDown, Plus, Pencil, Trash2, Check, Users, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -32,11 +32,20 @@ import {
   renameListAndRevalidate,
   deleteListAndRevalidate,
 } from '@/hooks/use-shopping-lists'
+import {
+  useIncomingInvites,
+  acceptInviteAndRevalidate,
+  declineInviteAndRevalidate,
+} from '@/hooks/use-shopping-list-sharing'
+import { useUser } from '@/hooks/use-user'
+import { ShoppingListShareDialog } from '@/components/shopping-list-share-dialog'
 import type { ShoppingList } from '@/lib/types'
 
 export function ShoppingListSwitcher() {
+  const { user } = useUser()
   const { lists } = useShoppingLists()
   const { activeListId, activeList } = useActiveList()
+  const { invites } = useIncomingInvites()
   const [open, setOpen] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [showManage, setShowManage] = useState(false)
@@ -52,6 +61,21 @@ export function ShoppingListSwitcher() {
     if (!ok) toast.error('Failed to switch list')
   }
 
+  async function handleAccept(inviteId: string, listId: string) {
+    const ok = await acceptInviteAndRevalidate(inviteId, listId)
+    if (ok) {
+      // Switch the user to the newly-joined list so they can see the items.
+      await setActiveListAndRevalidate(listId)
+    } else {
+      toast.error('Failed to accept invite')
+    }
+  }
+
+  async function handleDecline(inviteId: string) {
+    const ok = await declineInviteAndRevalidate(inviteId)
+    if (!ok) toast.error('Failed to decline invite')
+  }
+
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
@@ -60,10 +84,15 @@ export function ShoppingListSwitcher() {
             <span className="text-xl font-bold text-foreground truncate">
               {activeList.name}
             </span>
-            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="relative shrink-0">
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              {invites.length > 0 && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary" />
+              )}
+            </div>
           </button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-64 p-1">
+        <PopoverContent align="start" className="w-72 p-1">
           <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Your lists
           </div>
@@ -79,6 +108,47 @@ export function ShoppingListSwitcher() {
               )}
             </button>
           ))}
+
+          {invites.length > 0 && (
+            <>
+              <div className="border-t border-border my-1" />
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Mail className="h-3 w-3" />
+                Invites &middot; {invites.length}
+              </div>
+              {invites.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="px-2 py-1.5 rounded-md flex flex-col gap-1"
+                >
+                  <p className="text-sm leading-tight">
+                    <span className="font-medium">@{inv.inviterUsername}</span>
+                    <span className="text-muted-foreground"> invited you to </span>
+                    <span className="font-medium">{inv.listName}</span>
+                  </p>
+                  <div className="flex gap-1.5 mt-0.5">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="h-7 text-xs flex-1"
+                      onClick={() => handleAccept(inv.id, inv.listId)}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs flex-1"
+                      onClick={() => handleDecline(inv.id)}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
           <div className="border-t border-border my-1" />
           <button
             onClick={() => {
@@ -109,6 +179,7 @@ export function ShoppingListSwitcher() {
         onOpenChange={setShowManage}
         lists={lists}
         activeListId={activeListId}
+        currentUserId={user?.id ?? null}
       />
     </>
   )
@@ -179,11 +250,13 @@ function ManageListsDialog({
   onOpenChange,
   lists,
   activeListId,
+  currentUserId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   lists: ShoppingList[]
   activeListId: string | null
+  currentUserId: string | null
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -191,18 +264,26 @@ function ManageListsDialog({
         <DialogHeader>
           <DialogTitle>Manage lists</DialogTitle>
           <DialogDescription>
-            Rename or delete the lists you&rsquo;ve created.
+            Rename or delete your lists. Share lists with mutuals to edit them together.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-0.5">
-          {lists.map((list) => (
-            <ManageListRow
-              key={list.id}
-              list={list}
-              canDelete={lists.length > 1}
-              isActive={list.id === activeListId}
-            />
-          ))}
+          {lists.map((list) => {
+            const isCreator = !!(currentUserId && list.createdBy === currentUserId)
+            const ownedCount = currentUserId
+              ? lists.filter((l) => l.createdBy === currentUserId).length
+              : 0
+            return (
+              <ManageListRow
+                key={list.id}
+                list={list}
+                isCreator={isCreator}
+                canDelete={isCreator && ownedCount > 1}
+                isActive={list.id === activeListId}
+                currentUserId={currentUserId}
+              />
+            )
+          })}
         </div>
       </DialogContent>
     </Dialog>
@@ -211,16 +292,21 @@ function ManageListsDialog({
 
 function ManageListRow({
   list,
+  isCreator,
   canDelete,
   isActive,
+  currentUserId,
 }: {
   list: ShoppingList
+  isCreator: boolean
   canDelete: boolean
   isActive: boolean
+  currentUserId: string | null
 }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(list.name)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -276,21 +362,35 @@ function ManageListRow({
           {isActive && (
             <span className="text-xs text-muted-foreground mr-1">Active</span>
           )}
+          {!isCreator && (
+            <span className="text-xs text-muted-foreground mr-1">Shared</span>
+          )}
           <button
-            onClick={() => setEditing(true)}
+            onClick={() => setShowShare(true)}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            aria-label="Rename list"
+            aria-label={isCreator ? 'Share list' : 'View members'}
           >
-            <Pencil className="h-4 w-4" />
+            <Users className="h-4 w-4" />
           </button>
-          <button
-            onClick={() => setConfirmDelete(true)}
-            disabled={!canDelete}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-            aria-label="Delete list"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {isCreator && (
+            <>
+              <button
+                onClick={() => setEditing(true)}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                aria-label="Rename list"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setConfirmDelete(true)}
+                disabled={!canDelete}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                aria-label="Delete list"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </>
+          )}
         </>
       )}
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
@@ -312,6 +412,12 @@ function ManageListRow({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ShoppingListShareDialog
+        open={showShare}
+        onOpenChange={setShowShare}
+        list={list}
+        currentUserId={currentUserId}
+      />
     </div>
   )
 }

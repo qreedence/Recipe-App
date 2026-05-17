@@ -142,6 +142,28 @@ export interface ShoppingList {
   updatedAt: string
 }
 
+// Incoming/outgoing invite shape used in the UI — joins the invite row with
+// the relevant profile + list metadata so callers don't have to chase FKs.
+export interface ShoppingListInvite {
+  id: string
+  listId: string
+  listName: string
+  invitedBy: string
+  inviterUsername: string
+  inviterAvatarUrl: string | null
+  inviteeId: string
+  inviteeUsername: string
+  createdAt: string
+}
+
+export interface ShoppingListMember {
+  listId: string
+  userId: string
+  username: string
+  avatarUrl: string | null
+  joinedAt: string
+}
+
 export interface RecipeDraft {
   id: string // "create" or recipe UUID for edits
   step: number
