@@ -60,23 +60,35 @@ export function StepIngredients({
     const updated = [...ingredients]
     const ing = updated[index]
 
+    const baseMacros = ing.baseMacros ?? ing.macros
+    const macrosPer = ing.macrosPer ?? ing.quantity
+
     if (
       newQuantity !== null &&
       newQuantity > 0 &&
-      ing.baseMacros &&
-      ing.macrosPer &&
-      ing.macrosPer > 0
+      baseMacros &&
+      macrosPer &&
+      macrosPer > 0
     ) {
-      const ratio = newQuantity / ing.macrosPer
+      const ratio = newQuantity / macrosPer
       updated[index] = {
         ...ing,
         quantity: newQuantity,
+        baseMacros,
+        macrosPer,
         macros: {
-          kcal: Math.round(ing.baseMacros.kcal * ratio * 10) / 10,
-          carbs: Math.round(ing.baseMacros.carbs * ratio * 10) / 10,
-          fat: Math.round(ing.baseMacros.fat * ratio * 10) / 10,
-          protein: Math.round(ing.baseMacros.protein * ratio * 10) / 10,
+          kcal: Math.round(baseMacros.kcal * ratio * 10) / 10,
+          carbs: Math.round(baseMacros.carbs * ratio * 10) / 10,
+          fat: Math.round(baseMacros.fat * ratio * 10) / 10,
+          protein: Math.round(baseMacros.protein * ratio * 10) / 10,
         },
+      }
+    } else if (newQuantity !== null && newQuantity > 0 && baseMacros && !macrosPer) {
+      updated[index] = {
+        ...ing,
+        quantity: newQuantity,
+        baseMacros,
+        macrosPer: newQuantity,
       }
     } else {
       updated[index] = { ...ing, quantity: newQuantity }
