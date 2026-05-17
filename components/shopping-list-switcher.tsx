@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -146,6 +147,9 @@ function CreateListDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>New shopping list</DialogTitle>
+          <DialogDescription>
+            Give it a name — you can rename or delete it later.
+          </DialogDescription>
         </DialogHeader>
         <Input
           autoFocus
@@ -186,6 +190,9 @@ function ManageListsDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Manage lists</DialogTitle>
+          <DialogDescription>
+            Rename or delete the lists you&rsquo;ve created.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-0.5">
           {lists.map((list) => (
