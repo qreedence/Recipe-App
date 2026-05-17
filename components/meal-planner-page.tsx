@@ -39,6 +39,7 @@ import { DailyMacroSummary } from './daily-macro-summary'
 import { AggregatedIngredientsModal } from './aggregated-ingredients-modal'
 import { aggregateIngredients, type AggregatedIngredient } from '@/lib/aggregate-ingredients'
 import { addItemsAndRevalidate } from '@/hooks/use-shopping'
+import { useActiveList } from '@/hooks/use-shopping-lists'
 import { lookupCategory } from '@/lib/category-lookup'
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
@@ -460,6 +461,7 @@ export function MealPlannerPage() {
   const [activeSlot, setActiveSlot] = useState<MealSlot | null>(null)
   const [mounted, setMounted] = useState(false)
   const [clearDialogOpen, setClearDialogOpen] = useState(false)
+  const { activeListId } = useActiveList()
 
   useEffect(() => {
     const weekDates = getWeekDates()
@@ -612,7 +614,7 @@ export function MealPlannerPage() {
             recipeTitle: null,
             createdAt: Date.now(),
           }))
-          await addItemsAndRevalidate(items)
+          await addItemsAndRevalidate(items, activeListId ?? undefined)
         }}
       />
       <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>

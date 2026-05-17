@@ -9,13 +9,21 @@ import {
 } from "@/lib/sync/shopping-sync"
 import { ShoppingItem } from "@/lib/types"
 
-const KEY = "shopping-items"
+const KEY_PREFIX = "shopping-items"
 
-export function useShoppingItems() {
-  const { data, error, isLoading } = useSWR(KEY, getShoppingItems, {
-    fallbackData: [],
-    revalidateOnFocus: true,
-  })
+function keyFor(listId?: string) {
+  return listId ? [KEY_PREFIX, listId] : KEY_PREFIX
+}
+
+export function useShoppingItems(listId?: string) {
+  const { data, error, isLoading } = useSWR(
+    keyFor(listId),
+    () => getShoppingItems(listId),
+    {
+      fallbackData: [],
+      revalidateOnFocus: true,
+    },
+  )
 
   return {
     items: data ?? [],
@@ -25,11 +33,13 @@ export function useShoppingItems() {
 }
 
 async function revalidate() {
-  await globalMutate(KEY)
+  await globalMutate(
+    (key) => key === KEY_PREFIX || (Array.isArray(key) && key[0] === KEY_PREFIX),
+  )
 }
 
-export async function addItemsAndRevalidate(items: ShoppingItem[]) {
-  await storageAdd(items)
+export async function addItemsAndRevalidate(items: ShoppingItem[], listId?: string) {
+  await storageAdd(items, listId)
   await revalidate()
 }
 
@@ -43,12 +53,12 @@ export async function deleteItemAndRevalidate(id: string) {
   await revalidate()
 }
 
-export async function clearCheckedAndRevalidate() {
-  await storageClearChecked()
+export async function clearCheckedAndRevalidate(listId?: string) {
+  await storageClearChecked(listId)
   await revalidate()
 }
 
-export async function clearAllAndRevalidate() {
-  await storageClearAll()
+export async function clearAllAndRevalidate(listId?: string) {
+  await storageClearAll(listId)
   await revalidate()
 }

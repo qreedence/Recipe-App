@@ -9,6 +9,7 @@ import { drain, startSyncWorker, getSyncErrors, clearSyncErrors } from '@/lib/sy
 import { purgeExhausted } from '@/lib/sync/queue'
 import { hydrateRecipesFromCloud, migrateLocalRecipesToCloud } from '@/lib/sync/recipes-sync'
 import { hydrateShoppingFromCloud, migrateLocalShoppingToCloud } from '@/lib/sync/shopping-sync'
+import { hydrateShoppingListsFromCloud } from '@/lib/sync/shopping-lists-sync'
 import { hydrateMealPlanFromCloud, migrateLocalMealPlanToCloud } from '@/lib/sync/meal-plan-sync'
 import { hydrateMealTypeConfigFromCloud, migrateLocalMealTypeConfigToCloud } from '@/lib/sync/meal-type-config-sync'
 
@@ -53,13 +54,19 @@ export function SyncProvider() {
       }
 
       await hydrateRecipesFromCloud()
+      await hydrateShoppingListsFromCloud()
       await hydrateShoppingFromCloud()
       await hydrateMealPlanFromCloud()
       await hydrateMealTypeConfigFromCloud()
       if (cancelled) return
 
       await globalMutate('recipes')
-      await globalMutate('shopping-items')
+      await globalMutate('shopping-lists')
+      await globalMutate(
+        (key) =>
+          key === 'shopping-items' ||
+          (Array.isArray(key) && key[0] === 'shopping-items'),
+      )
       await globalMutate((key) => typeof key === 'string' && key.startsWith('meal-plan-'), undefined, { revalidate: true })
       await globalMutate('meal-type-config')
     }

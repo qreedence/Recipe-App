@@ -129,6 +129,17 @@ export interface ShoppingItem {
   recipeId: string | null
   recipeTitle: string | null
   createdAt: number
+  // Optional locally: items added before the v8 upgrade have no listId until
+  // the next hydration stamps them. Always present on cloud rows.
+  listId?: string
+}
+
+export interface ShoppingList {
+  id: string
+  name: string
+  createdBy: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface RecipeDraft {

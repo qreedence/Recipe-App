@@ -10,6 +10,7 @@ interface UserProfile {
   username: string
   avatarUrl: string | null
   isPublic: boolean
+  defaultShoppingListId: string | null
 }
 
 async function fetchUser(): Promise<UserProfile | null> {
@@ -19,7 +20,7 @@ async function fetchUser(): Promise<UserProfile | null> {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('username, avatar_url, is_public')
+    .select('username, avatar_url, is_public, default_shopping_list_id')
     .eq('user_id', user.id)
     .single()
 
@@ -28,6 +29,7 @@ async function fetchUser(): Promise<UserProfile | null> {
     username: profile?.username ?? '',
     avatarUrl: profile?.avatar_url ?? null,
     isPublic: profile?.is_public ?? false,
+    defaultShoppingListId: profile?.default_shopping_list_id ?? null,
   }
 }
 
@@ -53,6 +55,7 @@ export function useUser() {
     username: data?.username ?? '',
     avatarUrl: data?.avatarUrl ?? null,
     isPublic: data?.isPublic ?? false,
+    defaultShoppingListId: data?.defaultShoppingListId ?? null,
     loading: isLoading,
   }
 }

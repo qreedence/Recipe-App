@@ -83,6 +83,7 @@ function rowToItem(row: Tables<'shopping_items'>): ShoppingItem {
     recipeId: row.recipe_id,
     recipeTitle: row.recipe_title,
     createdAt: row.created_at,
+    listId: row.list_id,
   }
 }
 
@@ -102,7 +103,7 @@ const dispatcher: SyncDispatcher = async (write) => {
     const item = await db.shoppingItems.get(write.rowKey)
     if (!item) return // Locally deleted between enqueue and drain.
 
-    const listId = await getDefaultListId()
+    const listId = item.listId ?? (await getDefaultListId())
     if (!listId) throw new Error('No default shopping list available')
 
     const { error } = await supabase.from('shopping_items').upsert(itemToRow(item, listId))
@@ -149,15 +150,17 @@ export async function hydrateShoppingFromCloud(): Promise<void> {
 // Public API (unchanged signatures — UI/hooks keep working as-is)
 // ---------------------------------------------------------------------------
 
-export async function getShoppingItems(): Promise<ShoppingItem[]> {
+export async function getShoppingItems(listId?: string): Promise<ShoppingItem[]> {
   const userId = getCurrentUserId()
   if (userId && !(await hasPendingForTable('shopping_items'))) {
     try {
       const supabase = createClient()
-      const { data, error } = await supabase
+      let query = supabase
         .from('shopping_items')
         .select('*')
         .order('created_at', { ascending: true })
+      if (listId) query = query.eq('list_id', listId)
+      const { data, error } = await query
       if (!error && data) {
         const items = data.map(rowToItem)
         await db.shoppingItems.bulkPut(items)
@@ -165,23 +168,36 @@ export async function getShoppingItems(): Promise<ShoppingItem[]> {
       }
     } catch {}
   }
+  if (listId) {
+    return db.shoppingItems.where('listId').equals(listId).sortBy('createdAt')
+  }
   return db.shoppingItems.orderBy('createdAt').toArray()
 }
 
-export async function addShoppingItems(items: ShoppingItem[]): Promise<void> {
-  await db.shoppingItems.bulkPut(items)
+export async function addShoppingItems(
+  items: ShoppingItem[],
+  listId?: string,
+): Promise<void> {
   const userId = getCurrentUserId()
-  if (!userId) return
-  const listId = await getDefaultListId()
-  if (!listId) return
-  const rows = items.map((item) => itemToRow(item, listId))
+  const targetListId = listId ?? (userId ? await getDefaultListId() : null)
+
+  // Stamp the items so they belong to a known list before they hit Dexie
+  // (so the active-list filter on reads picks them up immediately).
+  const stamped = items.map((item) =>
+    targetListId ? { ...item, listId: targetListId } : item,
+  )
+  await db.shoppingItems.bulkPut(stamped)
+
+  if (!userId || !targetListId) return
+
+  const rows = stamped.map((item) => itemToRow(item, targetListId))
   try {
     const supabase = createClient()
     const { error } = await supabase.from('shopping_items').upsert(rows)
     if (!error) return
   } catch {}
-  for (const item of items) {
-    await enqueue('shopping_items', 'upsert', item.id, itemToRow(item, listId))
+  for (const item of stamped) {
+    await enqueue('shopping_items', 'upsert', item.id, itemToRow(item, targetListId))
   }
 }
 
@@ -191,7 +207,8 @@ export async function updateShoppingItem(id: string, updates: Partial<ShoppingIt
   if (!full) return
   const userId = getCurrentUserId()
   if (!userId) return
-  const listId = await getDefaultListId()
+  // Update keeps the item on its existing list — don't reassign on default.
+  const listId = full.listId ?? (await getDefaultListId())
   if (!listId) return
   try {
     const supabase = createClient()
@@ -213,9 +230,13 @@ export async function deleteShoppingItem(id: string): Promise<void> {
   await enqueue('shopping_items', 'delete', id, null)
 }
 
-export async function clearCheckedItems(): Promise<void> {
+export async function clearCheckedItems(listId?: string): Promise<void> {
   const all = await db.shoppingItems.toArray()
-  const checked = all.filter((i) => i.checked)
+  const checked = all.filter(
+    (i) => i.checked && (listId ? i.listId === listId : true),
+  )
+  if (checked.length === 0) return
+
   await db.shoppingItems.bulkDelete(checked.map((i) => i.id))
   const userId = getCurrentUserId()
   if (!userId) return
@@ -230,18 +251,21 @@ export async function clearCheckedItems(): Promise<void> {
   }
 }
 
-export async function clearAllShoppingItems(): Promise<void> {
+export async function clearAllShoppingItems(listId?: string): Promise<void> {
   const all = await db.shoppingItems.toArray()
-  await db.shoppingItems.clear()
+  const target = listId ? all.filter((i) => i.listId === listId) : all
+  if (target.length === 0) return
+
+  await db.shoppingItems.bulkDelete(target.map((i) => i.id))
   const userId = getCurrentUserId()
   if (!userId) return
-  const ids = all.map((i) => i.id)
+  const ids = target.map((i) => i.id)
   try {
     const supabase = createClient()
     const { error } = await supabase.from('shopping_items').delete().in('id', ids)
     if (!error) return
   } catch {}
-  for (const item of all) {
+  for (const item of target) {
     await enqueue('shopping_items', 'delete', item.id, null)
   }
 }
@@ -269,7 +293,13 @@ export async function migrateLocalShoppingToCloud(): Promise<number> {
   if (missing.length === 0) return 0
 
   for (const item of missing) {
-    await enqueue('shopping_items', 'upsert', item.id, itemToRow(item, listId))
+    const targetListId = item.listId ?? listId
+    await enqueue(
+      'shopping_items',
+      'upsert',
+      item.id,
+      itemToRow({ ...item, listId: targetListId }, targetListId),
+    )
   }
 
   void drain()

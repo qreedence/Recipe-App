@@ -11,6 +11,8 @@ import {
   clearCheckedAndRevalidate,
   clearAllAndRevalidate,
 } from "@/hooks/use-shopping"
+import { useActiveList } from "@/hooks/use-shopping-lists"
+import { ShoppingListSwitcher } from "@/components/shopping-list-switcher"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -283,7 +285,8 @@ function handleKeyDown(e: React.KeyboardEvent) {
 }
 
 export function ShoppingListPage() {
-  const { items, isLoading } = useShoppingItems()
+  const { activeListId } = useActiveList()
+  const { items, isLoading } = useShoppingItems(activeListId ?? undefined)
   const [newItemName, setNewItemName] = useState("")
   const [newItemAmount, setNewItemAmount] = useState("")
   const [newItemCategory, setNewItemCategory] = useState<string | null>(null)
@@ -331,7 +334,7 @@ export function ShoppingListPage() {
       createdAt: Date.now(),
     }
 
-    await addItemsAndRevalidate([item])
+    await addItemsAndRevalidate([item], activeListId ?? undefined)
     setNewItemName("");
     setNewItemAmount("");
     setNewItemCategory(null);
@@ -353,9 +356,8 @@ export function ShoppingListPage() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <h1 className="text-xl font-bold text-foreground lg:hidden">Shopping List</h1>
-              <h1 className="text-xl font-bold text-foreground hidden lg:block">Shopping List</h1>
+            <div className="min-w-0 flex-1">
+              <ShoppingListSwitcher />
               {totalCount > 0 && (
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {checkedCount} of {totalCount} items checked
@@ -366,7 +368,7 @@ export function ShoppingListPage() {
               <div className="flex items-center gap-2">
                 {checkedCount > 0 && (
                   <button
-                    onClick={clearCheckedAndRevalidate}
+                    onClick={() => clearCheckedAndRevalidate(activeListId ?? undefined)}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-accent"
                   >
                     Clear checked
@@ -390,7 +392,7 @@ export function ShoppingListPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={clearAllAndRevalidate}>
+                      <AlertDialogAction onClick={() => clearAllAndRevalidate(activeListId ?? undefined)}>
                         Clear All
                       </AlertDialogAction>
                     </AlertDialogFooter>

@@ -1,11 +1,19 @@
 import Dexie, { type EntityTable } from 'dexie'
-import { MealPlanEntry, MealTypeConfig, Recipe, RecipeDraft, ShoppingItem } from './types'
+import {
+  MealPlanEntry,
+  MealTypeConfig,
+  Recipe,
+  RecipeDraft,
+  ShoppingItem,
+  ShoppingList,
+} from './types'
 import type { PendingWrite } from './sync/types'
 import { parseAmount } from './parse-amount'
 
 const db = new Dexie('recipebook') as Dexie & {
   recipes: EntityTable<Recipe, 'id'>
   shoppingItems: EntityTable<ShoppingItem, 'id'>
+  shoppingLists: EntityTable<ShoppingList, 'id'>
   mealPlanEntries: EntityTable<MealPlanEntry, 'id'>
   mealTypeConfig: EntityTable<MealTypeConfig, 'id'>
   recipeDrafts: EntityTable<RecipeDraft, 'id'>
@@ -59,6 +67,18 @@ db.version(6).stores({
 
 db.version(7).stores({
   pendingWrites: '++id, table, createdAt, attemptCount',
+})
+
+// v8: introduce shopping lists.
+//
+// shoppingItems gains a listId index. Existing local items keep listId
+// undefined until the next sign-in hydration stamps them from the cloud
+// row (which always has list_id). The shopping page falls back to "show
+// all items" when no active list is selected, so unstamped items remain
+// visible during the in-between window.
+db.version(8).stores({
+  shoppingItems: 'id, listId, checked, category, recipeId, createdAt',
+  shoppingLists: 'id, createdBy',
 })
 
 export { db }
