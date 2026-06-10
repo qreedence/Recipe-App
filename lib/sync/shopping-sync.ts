@@ -144,6 +144,19 @@ export async function hydrateShoppingFromCloud(): Promise<void> {
   if (toUpsert.length > 0) {
     await db.shoppingItems.bulkPut(toUpsert)
   }
+
+  // Prune local rows the cloud no longer has — another list member deleted
+  // them. Keep rows with queued writes (still in flight) and rows without a
+  // listId (created signed-out, not yet migrated — see
+  // migrateLocalShoppingToCloud). Without this, stale cache rows linger
+  // forever and the migration sweep resurrects them on the next load.
+  const cloudIds = new Set(data.map((row) => row.id))
+  const stale = (await db.shoppingItems.toArray()).filter(
+    (item) => item.listId && !cloudIds.has(item.id) && !pendingIds.has(item.id),
+  )
+  if (stale.length > 0) {
+    await db.shoppingItems.bulkDelete(stale.map((item) => item.id))
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -164,6 +177,17 @@ export async function getShoppingItems(listId?: string): Promise<ShoppingItem[]>
       if (!error && data) {
         const items = data.map(rowToItem)
         await db.shoppingItems.bulkPut(items)
+        // Prune cached rows the cloud no longer has (deleted by another
+        // member). Scoped to the fetched list; unstamped pre-v8 rows
+        // (no listId) are left for hydration/migration to resolve.
+        const cloudIds = new Set(items.map((item) => item.id))
+        const cached = listId
+          ? await db.shoppingItems.where('listId').equals(listId).toArray()
+          : await db.shoppingItems.toArray()
+        const stale = cached.filter((item) => item.listId && !cloudIds.has(item.id))
+        if (stale.length > 0) {
+          await db.shoppingItems.bulkDelete(stale.map((item) => item.id))
+        }
         return items
       }
     } catch {}
@@ -278,8 +302,14 @@ export async function migrateLocalShoppingToCloud(): Promise<number> {
   const userId = getCurrentUserId()
   if (!userId) return 0
 
+  // Only items that have never touched the cloud are eligible: hydration and
+  // addShoppingItems both stamp a listId, so a missing listId means "created
+  // while signed out". Diffing ALL local rows against cloud ids (as this used
+  // to) re-uploads items other list members deleted — a stale cache row is
+  // indistinguishable from a local-only row by id alone.
   const localItems = await db.shoppingItems.toArray()
-  if (localItems.length === 0) return 0
+  const unsynced = localItems.filter((item) => !item.listId)
+  if (unsynced.length === 0) return 0
 
   const listId = await getDefaultListId()
   if (!listId) return 0
@@ -288,17 +318,18 @@ export async function migrateLocalShoppingToCloud(): Promise<number> {
   const { data, error } = await supabase.from('shopping_items').select('id')
   if (error) return 0
 
+  // Second guard: pre-v8 rows can lack a listId locally while existing in
+  // the cloud — skip those, hydration stamps them.
   const cloudIds = new Set((data ?? []).map((r) => r.id))
-  const missing = localItems.filter((i) => !cloudIds.has(i.id))
+  const missing = unsynced.filter((i) => !cloudIds.has(i.id))
   if (missing.length === 0) return 0
 
   for (const item of missing) {
-    const targetListId = item.listId ?? listId
     await enqueue(
       'shopping_items',
       'upsert',
       item.id,
-      itemToRow({ ...item, listId: targetListId }, targetListId),
+      itemToRow({ ...item, listId }, listId),
     )
   }
 
