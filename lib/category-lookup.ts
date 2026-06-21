@@ -135,6 +135,7 @@ const KEYWORD_MAP: [string, GroceryCategory][] = [
   ['röd paprika', 'Fruits & Vegetables'],
   ['grön paprika', 'Fruits & Vegetables'],
   ['gul paprika', 'Fruits & Vegetables'],
+  ['avocado', 'Fruits & Vegetables'],
 
   // Meat & Seafood
   ['chicken breast', 'Meat & Seafood'],
@@ -199,6 +200,7 @@ const KEYWORD_MAP: [string, GroceryCategory][] = [
   ['steak', 'Meat & Seafood'],
   ['meat', 'Meat & Seafood'],
   ['kött', 'Meat & Seafood'],
+  ['löjrom', 'Meat & Seafood'],
 
   // Dairy & Eggs
   ['oat milk', 'Dairy & Eggs'], // Usually found in dairy aisle
@@ -652,6 +654,7 @@ const KEYWORD_MAP: [string, GroceryCategory][] = [
   ['band-aid', 'Hygiene'],
   ['plåster', 'Hygiene'],
   ['D-vitamin', 'Hygiene'],
+  ['Βαμβάκι', 'Hygiene'],
 ]
 
 export function lookupCategory(itemName: string): GroceryCategory | null {

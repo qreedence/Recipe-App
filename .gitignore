@@ -20,3 +20,6 @@ public/swe-worker*
 .claude/
 CLAUDE.md
 AGENTS.md
+.agents/
+skills-lock.json
+plans/
