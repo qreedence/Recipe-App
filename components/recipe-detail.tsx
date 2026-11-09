@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Trash2, Flame, Drumstick, Beef, Wheat, Droplets, Pencil, Share2 } from 'lucide-react'
+import { ArrowLeft, Trash2, Flame, Drumstick, Beef, Wheat, Droplets, Pencil, Share2, Copy } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -19,6 +19,7 @@ import {
 import {
   useRecipe,
   deleteRecipeAndRevalidate,
+  saveRecipeAndRevalidate,
   updateRecipeAndRevalidate,
 } from '@/hooks/use-recipes'
 import { useUser } from '@/hooks/use-user'
@@ -34,6 +35,7 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
   const { recipe, isLoading } = useRecipe(id)
   const { user } = useUser()
   const [sharing, setSharing] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
 
   if (isLoading) return null
 
@@ -106,6 +108,29 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
     router.push('/')
   }
 
+  async function handleDuplicate() {
+    setDuplicating(true)
+    try {
+      const copy = {
+        ...recipe!,
+        id: crypto.randomUUID(),
+        title: `${recipe!.title} (copy)`,
+        ingredients: recipe!.ingredients.map((ing) => ({ ...ing, id: crypto.randomUUID() })),
+        steps: [...recipe!.steps],
+        tags: [...recipe!.tags],
+        isFavorite: false,
+        rating: null,
+        createdAt: Date.now(),
+      }
+      await saveRecipeAndRevalidate(copy)
+      toast.success('Recipe duplicated')
+      router.push(`/recipe/${copy.id}/edit`)
+    } catch {
+      toast.error('Failed to duplicate recipe')
+      setDuplicating(false)
+    }
+  }
+
   async function handleShare() {
     setSharing(true)
     try {
@@ -170,6 +195,14 @@ export function RecipeDetail({ id }: RecipeDetailProps) {
           >
             <Pencil className="h-5 w-5" />
           </Link>
+          <button
+            onClick={handleDuplicate}
+            disabled={duplicating}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0 disabled:opacity-40"
+            aria-label="Duplicate recipe"
+          >
+            <Copy className="h-5 w-5" />
+          </button>
           <FavoriteButton isFavorite={recipe.isFavorite} onToggle={handleFavorite} />
           <AlertDialog>
             <AlertDialogTrigger asChild>
